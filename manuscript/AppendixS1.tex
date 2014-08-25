@@ -1,0 +1,165 @@
+\documentclass[12pt,fleqn]{article}
+%\documentclass[12pt,a4paper]{article}
+\usepackage{natbib}
+\usepackage{lineno}
+%\usepackage{lscape}
+%\usepackage{rotating}
+%\usepackage{rotcapt, rotate}
+\usepackage{amsmath,epsfig,epsf,psfrag}
+\usepackage{setspace}
+\usepackage{ulem}
+\usepackage{xcolor}
+\usepackage[labelfont=bf,labelsep=period]{caption} %for making figure and table numbers bold
+\usepackage[colorlinks,bookmarksopen,bookmarksnumbered,citecolor=red,urlcolor=red]{hyperref}
+\hypersetup{pdfpagemode=UseNone}
+
+%\usepackage{a4wide,amsmath,epsfig,epsf,psfrag}
+
+
+\def\be{{\ensuremath\mathbf{e}}}
+\def\bx{{\ensuremath\mathbf{x}}}
+\def\bX{{\ensuremath\mathbf{X}}}
+\def\bthet{{\ensuremath\boldsymbol{\theta}}}
+\newcommand{\VS}{V\&S}
+\newcommand{\tr}{\mbox{tr}}
+%\renewcommand{\refname}{\hspace{2.3in} \normalfont \normalsize LITERATURE CITED}
+%this tells it to put 'Literature Cited' instead of 'References'
+\bibpunct{(}{)}{,}{a}{}{;}
+\oddsidemargin 0.0in
+\evensidemargin 0.0in
+\textwidth 6.5in
+\headheight 0.0in
+\topmargin 0.0in
+\textheight=9.0in
+%\renewcommand{\tablename}{\textbf{Table}}
+%\renewcommand{\figurename}{\textbf{Figure}}
+\renewcommand{\em}{\it}
+\renewcommand\thefigure{S1.\arabic{figure}}
+
+
+\begin{document}
+
+\begin{center} \bf {\large Avoiding extrapolation bias when using statistical models to make ecological prediction}
+
+\vspace{0.7cm}
+Paul B. Conn$^{1*}$, Devin S. Johnson$^1$, and Peter L. Boveng$^1$
+\end{center}
+\vspace{0.5cm}
+
+\rm
+\small
+
+\it $^1$National Marine Mammal Laboratory, Alaska Fisheries Science Center,
+NOAA National Marine Fisheries Service,
+Seattle, Washington 98115 U.S.A.\\
+
+\rm \begin{flushleft}
+
+\raggedbottom
+\vspace{.5in}
+
+\begin{center}
+Appendix S1: Model formulation and Gibbs sampling algorithms for certain classes and extensions of the generalized linear model
+\bigskip
+\end{center}
+\vspace{.3in}
+
+\doublespacing
+
+
+
+We write all statistical models for ecological prediction in the form
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:basic_model}
+  Y_i \sim f_Y(g^{-1}(\mu_i)),
+\end{equation}
+\end{linenomath*}
+where $\mu_i=\theta_i + \epsilon_i$, $f_Y$ denotes a probability density or mass function (e.g. Bernoulli, Poisson), $g$ gives a link function,
+$\theta_i$ is a linear predictor, and $\epsilon_i \sim {\rm Normal}(0,\tau_\epsilon)$ is iid Gaussian error with precision parameter $\tau_\epsilon$.  The specification in Eq. \ref{eq:basic_model} is thus doubly stochastic, in the sense that we assume error associated with $f_Y$ as well as in the location parameter $\mu_i$.  This setup can be useful computationally, and can also be used to approximate singly stochastic system by setting $\tau_\epsilon$ to a large value.  For instance, models for count data often assume a Poisson error structure with a log link function to ensure that the Poisson intensity parameter is greater than zero.  In this case, we would specify
+\begin{linenomath*}
+\begin{equation*}
+  Y_i \sim \mathrm{Poisson}(\exp(\theta_i + \epsilon_i)),
+\end{equation*}
+\end{linenomath*}
+a configuration known as a log-Gaussian Cox process.
+We now describe how different classes of statistical models can be developed depending on how one structures the linear predictor, $\theta_i$.
+
+\section{Models}
+\subsection{Generalized linear models (GLM)}
+
+Generalized linear models \citep{McCullaghNelder1989} are one of the simplest (and most often used) statistical models
+used by ecologists to make spatial predictions. In GLMs, the linear predictor is a simple linear function of gathered covariates
+(including possible quadratic terms of these covariates.  Statisticians often describe this relationship by
+$\boldsymbol{\theta}={\bf X} \boldsymbol{\beta}$, which is written in matrix notation.  In particular, $\boldsymbol{\theta}$ gives
+a vector of linear predictor values (one for each data point being analyzed), $\boldsymbol{\beta}$ gives a vector of regression coefficients, and ${\bf X}$ is a design matrix which includes all explanatory variables (and often a column vector of ones to represent an intercept).
+
+\subsection{Generalized additive models (GAM)}
+
+Although one can allow nonlinear relationships between response variables and regressors by including polynomial terms in the design matrix of a GLM, these need to be pre-selected by the analyst and it is often unclear how many such terms one should include. Generalized additive models \citep[GAMs;][]{HastieTibshirani1999,Wood2006} build upon generalized linear models, but instead allow smooth relationships between the dependent and independent variables using flexible functions such as splines.  Such models have
+been employed in a number of spatial prediction scenarios, including transect sampling models for animal abundance \citep{HedleyBuckland2004} and SDMs \citep{GuisanEtAl2002}.  For instance, animal density or presence can be modeled as a smooth, unknown function of a habitat covariate.
+
+There are a number of ways smooth relationships can be modeled; in order to formulate a GAM in the notation of Eq. \ref{eq:basic_model} we employ a knot-based kernel smoother with a radial basis function.  The basic notion is to place $k_j$ knots, which we will denote by $\boldsymbol{\omega}_j = \{ \omega_{1j},\omega_{2j},\hdots,\omega_{k_j j} \}$, throughout the range of a given regressor $j$, where the number of knots controls the level of smoothing.  For each regressor of interest, we can then calculate a matrix ${\bf K}_j$ of dimension $(n,k_j)$, with entries $\mathcal{N}(X_{ij};\omega_j,\tau_{\omega,j})$, where $\mathcal{N}(x;\mu,\tau)$ denotes a Gaussian distribution with mean $\mu$ and precision $\tau$.  We can then introduce additional regression coefficients $\boldsymbol{\alpha}_j$ to help model the smooth relationship, and incorporate these into the linear predictor.  In the case of one smooth term, we then have  in Eq. \ref{eq:basic_model}:
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:GAM}
+  \boldsymbol{\theta}={\bf X} \boldsymbol{\beta} + {\bf K}_j \boldsymbol{\alpha}_j
+\end{equation}
+\end{linenomath*}
+When fitting such a model, one needs to select the number and location of knots, as well as the precision parameter $\tau_{\omega,j}$ for the Gaussian basis kernels.  This could be done using some notion of optimality or prediction error (as with cross validation).  In practice, a simple recommendation is to set $\tau_{\omega,j}$ less than the range of the modeled covariate, and greater than the typical difference between observed values of the covariate.
+
+Our main point in writing the GAM as in Eq. \ref{eq:GAM} is to emphasize the structural similarity between GLMs and certain classes
+of GAMs.  In particular,
+we can rewrite Eq. \ref{eq:GAM} as
+$\boldsymbol{\theta}={\bf X}_{aug} \boldsymbol{\beta}_{aug}$,
+where ${\bf X}_{aug} = \left[ {\bf X} \hspace{3mm} {\bf K}_j \right]$ (i.e., concatenating ${\bf X}$ and ${\bf K}_j$ horizontally), and $\boldsymbol{\beta}_{aug}=\left[  \boldsymbol{\beta} \hspace{3mm} \boldsymbol{\alpha}_j \right] ^\prime$ (the subscript $aug$ denotes augmentation).  We shall exploit this structure when examining
+extrapolation bias.  We note that similar formulations for GAMs (e.g. using thin plate splines) can be represented in a similar form \citep[cf.][]{CrainiceanuEtAl2005}.
+
+\subsection{Introducing spatial and/or temporal autocorrelation: spatio-temporal regression models (STRMs)}
+
+The previous two modeling frameworks (GLMs and GAMs) do not acknowledge spatial autocorrelation above and beyond that induced
+by modeled covariates.  However, it is common for residuals from GLM and GAM model fits to include spatial autocorrelation, which violates their common assumption of independently distributed error \citep{Legendre1993,LichsteinEtAl2002}.  Parameter estimates from GLMs and GAMs that display residual autocorrelation should be interpreted with caution, as they will tend to have overstated precision and may even be biased.  In such situations, analysts often employ spatial regression models which explicitly account for spatial autocorrelation above and beyond that explained by modeled covariates.
+
+There are a variety of ways spatial autocorrelation can be included in regression models, depending on (i) the spatial support (i.e., continuous vs. discrete), and (ii) the particular mechanism used to impart correlation.  Here, we shall focus on areal models for discrete spatial support, as our impression is that these are more commonly employed in ecological studies.  Such models require that data are aggregated at the level of some sample unit (plots, grid cells, etc.).  Spatio-temporal regression models (STRMs) for areal data are often specified in a similar fashion to GLMs and GAMs:
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:spat_reg}
+  \boldsymbol{\theta}={\bf X} \boldsymbol{\beta} + \boldsymbol{\eta},
+\end{equation}
+\end{linenomath*}
+where $\boldsymbol{\eta}$ represent spatially autocorrelated effects.  In this treatment we shall consider two approaches for
+inducing spatial autocorrelation in $\boldsymbol{\eta}$: process convolution
+\citep[PC;][]{Higdon1998} and restricted spatial regression \citep[RSR;][]{Reich2006,Hodges2010,Hughes2013}.
+
+The PC implementation works by placing $k$ knots throughout the spatial domain being analyzed, and like our GAM formulation, uses distances from the center point of each sample unit to each of these knot locations to induce spatial structure.  Using similar notation to our GAM formulation, we denote these knots as $\boldsymbol{\omega} = \{ \boldsymbol{\omega_{1}},\boldsymbol{\omega}_{2},\hdots,\boldsymbol{\omega}_{k} \}$; the $\boldsymbol{\omega}_m$ are bivariate in this  instance as space is assumed to be two dimensional.  We then construct a matrix ${\bf K}$ of dimension $(n,k)$ with entries $\mathcal{BVN}({\bf s}_i;\boldsymbol{\omega}_m,\tau_{\omega})$, where $\mathcal{BVN}({\bf x};{\bf \mu},\tau)$ denotes a bivariate Gaussian distribution with mean $\boldsymbol{\mu}$ and precision $\tau$.  As with our GAM model we introduce additional regression coefficients $\boldsymbol{\alpha}$ to estimate the level of spatial smoothing conditional on the assumed knot structure and reparameterize the STRM as
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:PC}
+  \boldsymbol{\theta}={\bf X} \boldsymbol{\beta} + {\bf K} \boldsymbol{\alpha}
+\end{equation}
+\end{linenomath*}
+This model is structurally very similar to the GAM model (indeed it may be interpreted as a GAM with a bivariate smooth on spatial location).  Similarly, we can rearrange terms to write it similar to the GLM, such that
+$\boldsymbol{\theta}={\bf X}_{aug} \boldsymbol{\beta}_{aug}$,
+where in this case ${\bf X}_{aug} = \left[ {\bf X} \hspace{3mm} {\bf K} \right]$, and $\boldsymbol{\beta}_{aug}=\left[  \boldsymbol{\beta} \hspace{3mm} \boldsymbol{\alpha} \right] ^\prime$.
+
+The RSR approach to spatial regression uses a reduced-rank version of the popular intrinsic conditionally autoregressive \citep[ICAR;][]{Besag1995,Rue2005} model for spatial random effects, reparameterized so that basis vectors are orthogonal to the main effects of interest.  This approach has generated substantial recent interest, as fixed effects retain primacy in explaining variation in the ecological process of interest and problems with spatial confounding between fixed and random effects are eliminated. As such, spatial random effects are only used to account for residual autocorrelation \citep{Reich2006,Hodges2010} and the decision to incorporate spatial autocorrelation has little effect on the point estimates of fixed effects.  In addition, reduced dimension spatial models such as RSR lighten computational burden while still accounting for course-scale spatial autocorrelation \citep[see e.g.][]{LatimerEtAl2009,Wikle2010,Hughes2013}.  It turns out that RSR models can also be written in the form of Eq. \ref{eq:PC}, using a
+different choice of ${\bf K}$ \citep{Hughes2013}, constructed as follows:
+\begin{enumerate}
+  \item Define the residual projection matrix ${\bf P}^\perp={\bf I}-{\bf X}({\bf X}^\prime{\bf X})^{-1}{\bf X}^\prime$
+  \item Calculate the Moran operator matrix $\boldsymbol{\Omega}=J{\bf P}^\perp \mathcal{W}{\bf P}^\perp/{\bf 1}^\prime \mathcal{W} {\bf 1}$
+  \item Define ${\bf K}$ as an $(n \times m)$ matrix, where the columns of ${\bf K}$ are composed of the eigenvectors  associated with the largest $m$ eigenvalues of $\boldsymbol{\Omega}$. Hughes and Haran (\citeyear{Hughes2013}) used simulation to explore a range of such values and concluded $m=50-100$ should suffice for most applications.
+\end{enumerate}
+Here, ${\bf I}$ an identity matrix, ${\bf 1}$ is a column vector of ones, and $\mathcal{W}$ represents an association matrix describing the spatial neighborhood structure of sampling units.  For instance, for a first order neighborhood structure, $\mathcal{W}$ would include a 1 for all rows $i$ and columns $j$ where sampling unit $i$ and $j$ are neighbors \citep[see][for alternative association matrices]{Rue2005}.
+
+\renewcommand{\refname}{Literature Cited}
+\bibliographystyle{ecology}
+
+\bibliography{master_bib}
+
+\end{flushleft}
+\end{document}
+
+
+
+
+
