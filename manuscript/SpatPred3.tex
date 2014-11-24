@@ -71,7 +71,7 @@ WA 98115 USA }\\ \medskip
 
 
 
-{\em Key words: Abundance, Extrapolation, Forecasting, General additive models, Generalized linear models, Independent Variable Hull, Leverage, Occupancy, Spatial regression}
+{\em Key words: Abundance, Extrapolation, General additive models, Generalized linear models, Independent Variable Hull, Leverage, Prediction variance, Spatial regression, Species distribution model}
 
 \centerline{\sc Introduction}
 
@@ -87,7 +87,7 @@ making robust predictions at new combinations of explanatory variables.  The iss
 philosophical problem than a statistical one, and has even been likened to soothsaying \citep{EhrenbergBound1993}.  To our mind, the reliability of predictions from statistical models is likely a function of several factors, including (i) the intensity of sampling,
 (ii) spatial or temporal proximity of the prediction location to locations where there are data, (iii) variability of the ecological process, and (iv) the similarity of explanatory covariates in prediction locations when compared to the ensemble of covariates for observed data locations.
 
-Our aim in this paper is to investigate extrapolation bias in the generalized linear model and its extensions, including generalized additive models \citep[GAMs;][]{HastieTibshirani1999,Wood2006} and spatial, temporal, or spatio-temporal regression models (STRMs).  In particular, we exploit some of the same ideas used in multiple linear regression regarding leverage and outliers \citep{Cook1979} to operationally define ``extrapolation" as making predictions that occur outside of a generalized independent variable hull (gIVH) of observed data points. Application of the gIVH can provide intuition regarding the reliability of predictions in unobserved locations, and can aid in model construction.  Also, since the gIVH can be constructed solely with knowledge of sampled locations and explanatory covariates (i.e., it does not necessarily require any observed response variables), it can also be used to help guide survey design. We illustrate use of the gIVH on a simulated occupancy dataset, on a species distribution model (SDM) for ribbon seals in the eastern Bering Sea, and on a population trend model for Steller Sea Lions ({\it Phoca fasciata}).
+Our aim in this paper is to investigate extrapolation bias in the generalized linear model and its extensions, including generalized additive models \citep[GAMs;][]{HastieTibshirani1999,Wood2006} and spatial, temporal, or spatio-temporal regression models (STRMs).  In particular, we exploit some of the same ideas used in multiple linear regression regarding leverage and outliers \citep{Cook1979} to operationally define ``extrapolation" as making predictions that occur outside of a generalized independent variable hull (gIVH) of observed data points. Application of the gIVH and related criterion (e.g. prediction variance) can provide intuition regarding the reliability of predictions in unobserved locations, and can aid in model construction.  Also, since the gIVH can be constructed solely with knowledge of sampled locations and explanatory covariates (i.e., it does not necessarily require any observed response variables), it can also be used to help guide survey design. We illustrate use of the gIVH on a simulated occupancy dataset, on a species distribution model (SDM) for ribbon seals in the eastern Bering Sea, and on a population trend model for Steller Sea Lions ({\it Phoca fasciata}).
 
 \section{The generalized independent variable hull (gIVH)}
 
@@ -111,22 +111,22 @@ Cook (\citeyear{Cook1979}) used this concept to identify influential observation
 
 We simulated two sets of design data to help illustrate application of the IVH (Fig. \ref{fig:IVH}).  In simple linear regression with one predictor variable, predictions on a hypothetical response variable obtained at covariate values below the lowest observed value or above the highest observed value are primarily outside of the IVH.  We suspect this result conforms to most ecologists intuition about what constitutes ``extrapolating past the observed data."  However, fitting a quadratic model exhibits more nuance; if there is a large gap between design points, it is entirely possible that intermediate covariate values will also be outside of the IVH and thus more likely to result in problematic predictions.  Fitting a model with two covariates and both linear and quadratic effects, the shape of the IVH is somewhat more irregular, and even includes a hole in the middle of the surface when interactions are modeled (Fig. \ref{fig:IVH}).  These simple examples highlight the sometimes counterintuitive nature of the predictive inference problem, a problem that can only become worse as models with more dimensions are contemplated (including those with temporal or spatial structure).  Fortunately, the ideas behind the IVH provide a potential way forward.
 
-Cook's (1979) formulation for the IVH is particular to linear regression analysis, which assumes iid normally distributed error. Thus, it is not directly applicable to generalized models, such as those including spatial random effects.  Further, the hat matrix is not necessarily well defined for models with more general spatial structure. However, since the hat matrix is proportional to prediction variance, Cook (1979) notes that design points with maximum prediction variance will be located on the boundary of the IVH.  Working on the linear predictor scale, we therefore define a generalized independent variable hull (gIVH) as the set of all points ${\bf x}$ (note that ${\bf x}$ can include both observed and unobserved design points) such that
+Cook's (1979) formulation for the IVH is particular to linear regression analysis, which assumes iid Gaussian error. Thus, it is not directly applicable to generalized models, such as those including alternative error distributions (e.g., Poisson, binomial) or spatial random effects.  Further, the hat matrix is not necessarily well defined for models with more general spatial structure. However, since the hat matrix is proportional to prediction variance, Cook (1979) notes that design points with maximum prediction variance will be located on the boundary of the IVH.  We therefore define a generalized independent variable hull (gIVH) as the set of all points ${\bf x}$ (note that ${\bf x}$ can include both observed and unobserved design points) such that
 \begin{linenomath*}
 \begin{equation}
   \label{eq:gIVH}
-  {\rm var}(\boldsymbol{\mu}_x | {\bf x}) \le {\rm max} [{\rm var}(\boldsymbol{\mu}_X | {\bf X})],
+  {\rm var}({\bf y}_x | {\bf x}) \le {\rm max} [{\rm var}({\bf y}_X | {\bf X})],
 \end{equation}
 \end{linenomath*}
-where $\boldsymbol{\mu}_x$ correspond to predictions at ${\bf x}$, and ${\bf X}$ and $\boldsymbol{\mu}_X$ denote observed design points and predictions at $X$, respectively.
+where ${\bf Y}_x$ correspond to predictions at ${\bf x}$, and ${\bf X}$ and ${\bf Y}_X$ denote observed design points and predictions at $X$, respectively.
 
 Generalizations of the linear model are often written in the form
 \begin{linenomath*}
 \begin{equation}
-  Y_i \sim f_Y(g^{-1}(\mu_i)),
+  Y_i \sim f_Y(g(\mu_i)),
 \end{equation}
 \end{linenomath*}
-where $f_Y$ denotes a probability density or mass function (e.g. Bernoulli, Poisson), $g$ gives a link function, and
+where $f_Y$ denotes a probability density or mass function (e.g. Bernoulli, Poisson), $g$ gives an inverse link function, and
 $\mu_i$ is a predictor.  For many such generalizations, it is possible to specify the $\mu_i$ as
 \begin{linenomath*}
 \begin{equation}
@@ -134,7 +134,7 @@ $\mu_i$ is a predictor.  For many such generalizations, it is possible to specif
   \label{eq:mu-aug}
 \end{equation}
 \end{linenomath*}
-where the $\boldsymbol{\epsilon}$ represent Gaussian error, ${\bf X}_{aug}$ denotes an augmented design matrix, and $\boldsymbol{\beta}_{aug}$ denote an augmented vector of parameters.  For instance, in a spatial model, $\boldsymbol{\beta}_{aug}$ might include both fixed effect parameters and spatial random effects in a reduced dimension subspace (see Appendix S1 for examples of how numerous types of models can be written in this form).
+where the $\boldsymbol{\epsilon}$ represent Gaussian error, ${\bf X}_{aug}$ denotes an augmented design matrix, and $\boldsymbol{\beta}_{aug}$ denote an augmented vector of parameters.  For instance, in a spatial model, $\boldsymbol{\beta}_{aug}$ might include both fixed effect parameters and spatial random effects in a reduced dimension subspace (see Appendix A for examples of how numerous types of models can be written in this form).
 
 When models are specified as in Eq. \ref{eq:mu-aug}, we can write prediction variance generically as
 \begin{linenomath*}
@@ -143,40 +143,62 @@ When models are specified as in Eq. \ref{eq:mu-aug}, we can write prediction var
   {\rm var}(\boldsymbol{\mu}_x | {\bf x})= {\bf x} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}) {\bf x}^\prime,
 \end{equation}
 \end{linenomath*}
-where it is understood that the exact form of ${\bf x}$ and ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ depends on the model chosen (i.e., GLM, GAM, or STRM; Appendix S1). For GLMs, prediction variance is proportional to the original hat matrix ${\bf V}_{LR}$ (at least on the linear predictor scale), and Eq. \ref{eq:IVH} may be used directly.  For other models, we have
+where it is understood that the exact form of ${\bf x}$ and ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ depends on the model chosen (i.e., GLM, GAM, or STRM; Appendix A). This expression for prediction variance is on the linear predictor scale; if a non-identity link function is used, we can use the delta method \citep{Dorfman1938,VerHoef2012} to approximate prediction variance on the real scale (i.e. the scale in which data are measured) as
 \begin{linenomath*}
-\begin{equation}
-  \label{eq:var_Beta}
-  {\rm var}(\hat{\boldsymbol{\beta}}_{aug})=\left[ \begin{array}{cc}
-      \boldsymbol{\Sigma}_\beta & {\bf 0}\\
-      {\bf 0} & \boldsymbol{\Sigma}_\alpha
-  \end{array} \right],
-\end{equation}
+\begin{eqnarray*}
+  \label{eq:var-mu}
+  {\rm var}(g(\mu_x) | {\bf x}) & = & \boldsymbol{\Delta} {\rm var}(\boldsymbol{\mu}_x | {\bf x})\boldsymbol{\Delta}^\prime, 
+%  \boldsymbol{\Delta} & = & \left[ \begin{array}{cccc}
+%      \frac{\partial g(\mu_1)}{\partial \mu_1} & \frac{\partial g(\mu_1)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_1)}{\partial \mu_n} \\
+%      \frac{\partial g(\mu_2)}{\partial \mu_1} & \frac{\partial g(\mu_2)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_2)}{\partial \mu_n} \\
+%      \vdots & \vdots & \ddots & \vdots \\
+%      \frac{\partial g(\mu_n)}{\partial \mu_1} & \frac{\partial g(\mu_n)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_n)}{\partial \mu_n} \\
+%  \end{array} \right].
+\end{eqnarray*}
 \end{linenomath*}
-where we simply replace $\boldsymbol{\beta}_{aug}$ with the augmented vector that includes both regression and spatial or smooth parameters (i.e. $\boldsymbol{\beta}$ and $\boldsymbol{\alpha}$; Appendix S1).
+where $\boldsymbol{\Delta}$ is a matrix of partial derivatives $\partial g(\mu_r)/\partial \mu_c$ ($r$ and $c$ denoting rows and columns of $\boldsymbol{\Delta}$, respectively).  Under common univariate link functions (e.g. log, logit, probit), $\boldsymbol{\Delta}$ has a diagonal form, while for multivariate links (e.g. multinomial logit) $\boldsymbol{\Delta}$ will be dense.
 
-The exact form of ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ differs depending on the underlying model structure and estimation procedure.  In the following treatment, we shall focus on Bayesian analysis; although it is not necessarily needed to fit GLMs and GAMs, it helps make STRMs more computationally tractable and puts all of the different models into a common analysis framework.  This approach requires specifying priors for model parameters, and prior parameters may appear in expressions for prediction variance.  Judicious choices of priors can at times limit the influence of priors on calculation of the gIVH.  For example, if we specify the prior on the vector of regression coefficients to be $[\boldsymbol{\beta}] = \textrm{MVN}({\bf 0},(\tau_\beta X^\prime X)^{-1})$ where $\tau_\beta$ is a fixed constant, a Bayesian implementation of a GLM still results in the gIVH specified in Eq. \ref{eq:IVH}.  The ability to use Eq. 5 directly is quite useful, as we only need to know the explanatory variables to be able to diagnose whether predictions lie in or out of the gIVH. However, the other models considered here (GAMs and STRMs) typically require estimation of an additional precision parameter.   In these cases, one solution is to impose prior distributions and integrate over precision parameters (call these $\boldsymbol{\tau}$) to obtain an expectation for ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$.  Using the law of the unconscious statistician, we have
+%For GLMs, prediction variance is proportional to the original hat matrix ${\bf V}_{LR}$ (at %least on the linear predictor scale), and Eq. \ref{eq:IVH} may be used directly.  For other %models, we have
+%\begin{linenomath*}
+%\begin{equation}
+%  \label{eq:var_Beta}
+%  {\rm var}(\hat{\boldsymbol{\beta}}_{aug})=\left[ \begin{array}{cc}
+%      \boldsymbol{\Sigma}_\beta & {\bf 0}\\
+%      {\bf 0} & \boldsymbol{\Sigma}_\alpha
+%  \end{array} \right],
+%\end{equation}
+%\end{linenomath*}
+%where we simply replace $\boldsymbol{\beta}_{aug}$ with the augmented vector that includes %both regression and spatial or smooth parameters (i.e. $\boldsymbol{\beta}$ and %$\boldsymbol{\alpha}$; Appendix S1).
+
+The exact form of ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ differs depending on the underlying model structure and estimation procedure.  In the following treatment, we shall focus on Bayesian analysis; although it is not necessarily needed to fit GLMs and GAMs, it helps make STRMs more computationally tractable and puts all of the different models into a common analysis framework.  This approach requires specifying priors for model parameters, and prior parameters may appear in expressions for prediction variance.  Judicious choices of priors can at times limit the influence of priors on calculation of the gIVH.  For example, if we specify the prior on the vector of regression coefficients to be $[\boldsymbol{\beta}] = \textrm{MVN}({\bf 0},(\tau_\beta X^\prime X)^{-1})$ where $\tau_\beta$ is a fixed constant, a Bayesian implementation of a GLM still results in the gIVH specified in Eq. \ref{eq:IVH}.  The ability to use Eq. 5 directly is quite useful, as we only need to know the explanatory variables to be able to diagnose whether predictions lie in or out of the gIVH. However, the other models considered here (GAMs and STRMs) typically require estimation of one or more precision or autocorrelation parameters.   In these cases, one solution is to impose prior distributions and integrate over these additional parameters (call them $\boldsymbol{\theta}$) to obtain an expectation for ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$.  Using the law of the unconscious statistician, we have
 \begin{linenomath*}
 \begin{equation}
   \label{eq:E_var_Beta}
-  {\rm E}({\rm var}(\hat{\boldsymbol{\beta}}_{aug}))  = \int_{\boldsymbol{\tau}} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}) [\boldsymbol{\tau}] d \boldsymbol{\tau}.
+  {\rm E}({\rm var}(\hat{\boldsymbol{\beta}}_{aug}))  = \int_{\boldsymbol{\theta}} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}|\boldsymbol{\theta}) [\boldsymbol{\theta}] d \boldsymbol{\theta}.
 \end{equation}
 \end{linenomath*}
-Here, and throughout the paper, we use the bracket notation to indicate a probability density function; e.g., $[\boldsymbol{\tau}] $ denotes the joint prior distribution for precision parameters $\boldsymbol{\tau}$. If observations have already been gathered, one could also consider integrating over the marginal posterior distribution using MCMC:
+Here, and throughout the paper, we use the bracket notation to indicate a probability density function; e.g., $[\boldsymbol{\theta}] $ denotes the joint prior distribution for $\boldsymbol{\theta}$. If observations have already been gathered, one could also consider integrating over the marginal posterior distribution using MCMC:
 \begin{linenomath*}
 \begin{equation}
   \label{eq:E_var_Beta_post}
-  {\rm E}({\rm var}(\hat{\boldsymbol{\beta}}_{aug}) | {\bf Y})  = \int_{\boldsymbol{\tau}} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}) [\boldsymbol{\tau}| {\bf Y}] d \boldsymbol{\tau}.
+  {\rm E}({\rm var}(\hat{\boldsymbol{\beta}}_{aug}) | {\bf Y})  = \int_{\boldsymbol{\theta}} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}|\boldsymbol{\theta}) [\boldsymbol{\theta}| {\bf Y}] d \boldsymbol{\theta}.
 \end{equation}
 \end{linenomath*}
+Some care must be taken with prior distributions if Eq. \ref{eq:E_var_Beta} is used for calculation of prediction variance.  For instance, standard ``non-informative" or ``flat" priors may place substantial mass on implausible values.  When using the gIVH or prediction variance to help guide sampling design \citep[see][for an example using prediction variance]{DiggleLophaven2006}, we suggest using informative prior distributions.
 
-We propose to use the gIVH in much the same manner as Cook (1979).  In particular, we use the gIVH to differentiate whether spatial predictions are interpolations (predictive design points lying inside the gIVH) or extrapolations (predictive design points lying outside the gIVH).  To our knowledge, this is the first time this definition has been used in the context of spatial prediction, but one we shall show can be quite helpful in diagnosing and mitigating extrapolation bias.  The gIVH seems ideally situated to this task as it does not necessarily need to rely on gathered response data. Thus, one can examine whether or not prediction points lie within the IVH without ever collecting response data there.
+We propose to use the gIVH in much the same manner as Cook (1979).  In particular, we use the gIVH to differentiate whether spatial predictions are interpolations (predictive design points lying inside the gIVH) or extrapolations (predictive design points lying outside the gIVH).  The gIVH, together with prior-integrated prediction variance, seem ideally situated to diagnosing potential extrapolation issues as it does not necessarily need to rely on gathered response data. Thus, one can examine whether or not prediction points lie within the gIVH without ever collecting response data there.  Further, one can compare prediction variance in places one has data to places where predictions are desired to gauge the relative amount of information that predictions are being based on.
 
 \section{Examples}
 
 \subsection{Simulation study}
 
-We conducted simulation analyses to investigate whether the gIVH was useful in diagnosing prediction biases in occupancy and abundance analyses. In both cases, we abundance on a $30 \times 30$ grid, and generated as a function of four habitat covariates in addition to spatial process covariance (Appendix S2). The habitat covariates also
+We conducted a simulation study to investigate whether the gIVH (and accompanying prediction variance) was useful in diagnosing prediction biases when analyzing animal count data. For each of 100 simulations, we generated animal abundance over a $30 \times 30$ grid assuming that animal density was homogeneous in each grid cell.  Animal abundance was generated as a function of four hypothetical habitat covariates (Appendix B).   For each simulated landscape, we randomly selected 60 grid cells for sampling, assuming that sampling quadrats encompassed 10\% of the area of each selected grid cell.  For ease of presentation and analysis, we assumed detection probability was 100\% in each quadrat.  Once animal counts were simulated, three different estimation models were fitted to the data: a GLM, a GAM, and an STRM (Appendix B).  The GLM and STRM expressed log-density as a function of linear and quadratic covariate effects, while the GAM used a kernel smoother with 4 knots for each covariate (Appendix B).  Each model was provided with three of the four covariates used to generate the data.
+
+For each simulated data set and model structure, we calculated (1) $\text{gIVH}_{int}$, the gIVH resulting from integrating over prior parameter variance (i.e. using Eq. \ref{eq:E_var_Beta} with informative priors), and (2) $\text{gIVH}_{post}$, the gIVH arising from posterior predictive variance (i.e. posterior variance when data are actually analyzed).  We then calculated posterior predictions of animal abundance within and outside of each gIVH in order to gauge bias as a function of whether or not inference is constrained to the gIVH.  Specifically, the performance of the $\text{gIVH}_{int}$ criterion in diagnosing extrapolation bias is a test of whether it is useful in designing animal count surveys, while the performance of $\text{gIVH}_{post}$ may help decide its utility in limiting the scope of landscape-based inference once data have been collected and analyzed.
+
+
+
+
 
 \subsection{Ribbon seal SDM}
 As part of an international effort, researchers with the U.S. National Marine Fisheries Service conducted aerial surveys over the eastern Bering Sea in 2012 and 2013.  Agency scientists used infrared video to detect seals that were on ice, and simultaneous automated digital photographs provided information on species identity. Here, we use spatially referenced count data from photographed ribbon seals, {\it Phoca fasciata} (Fig. \ref{fig:ribbon}) on a subset of 10 flights flown over the Bering Sea in April 2012.  These flights were limited to a one week period so that both sea ice conditions and seal distributions could be assumed to be static.
@@ -246,7 +268,7 @@ Fieberg PVA
 
 FIGURE 1. A ribbon seal, {\it Phoca fasciata}; the focus of spatial modeling efforts in this paper.
 
-FIGURE 2. Examples IVHs constructed from simulated data.  In panels A and B, the investigator plans to model a hypothetical (unmeasured) response variable using a linear regression model as a function of a single covariate, $x$, obtained at a number of design points (denoted with an ``x").  Using $x$ as a simple linear effect (A), only predictions less than the minimum observed value of $x$ or greater than the maximum value of $x$ are outside the IVH (shaded area), as scaled prediction variance in these areas (solid line) are greater than the maximum scaled prediction variance for observed data (dashed line).  Using both linear and quadratic effects of $x$, some intermediate points are also outside the IVH; predictions at these points should also be viewed with caution.  Panels C $\&$ D show a more complicated IVH when the investigator wishes to relate an unmeasured response variable to linear and quadratic effects of two covariates, $x$ and $y$, either without interactions (C) or with interactions (D).  Any potential predictions in the shaded area are outside of the IVH and should be viewed with caution.
+FIGURE 2. Examples IVHs constructed from simulated data.  In panels A and B, the investigator plans to model a hypothetical (unmeasured) response variable using a linear regression model as a function of a single covariate, $x$, obtained at a number of design points (denoted with an ``x").  Using $x$ as a simple linear effect (A), only predictions less than the minimum observed value of $x$ or greater than the maximum value of $x$ are outside the IVH (shaded area), as scaled prediction variance in these areas (solid line) are greater than the maximum scaled prediction variance for observed data (dashed line).  Using both linear and quadratic effects of $x$, some intermediate points are also outside the IVH; predictions at these points should also be viewed with some caution.  Panels C $\&$ D show a more complicated IVH when the investigator wishes to relate an unmeasured response variable to linear and quadratic effects of two covariates, $x$ and $y$, either without interactions (C) or with interactions (D).  Any potential predictions in the shaded area are outside of the IVH.
 
 FIGURE 3. Aerial surveys over the Bering Sea in spring of 2012 (blue lines) overlayed on
 a tesselated surface composed of 25km by 25km grid cells.  Gray indicates land, and colored pixels indicate ribbon seal encounters (yellow: 1-2 seals; orange: 3-4 seals; magenta: 5-9 seals; red: 10-15 seals).  On average, photographs covered approximately $2.6km^2$ ($0.4\%$) of each surveyed grid cell.

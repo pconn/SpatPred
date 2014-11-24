@@ -7,12 +7,12 @@
 #' @export
 #' @keywords spatio-temporal, simulation
 #' @author Paul B. Conn
-sim_data_generic<-function(S,n.covs=4,tau.epsilon=20){
+sim_data_generic<-function(S,n.covs=4,tau.epsilon=10){
   require(ggplot2)
   require(Matrix)
   require(spatstat)
   
-  tau.epsilon=20
+  tau.epsilon=10
   
   source('./SpatPred/R/util_funcs.R')
    
@@ -24,8 +24,8 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=20){
   Covs=matrix(0,S,n.covs)
   for(icov in 1:n.covs){
     kappa=runif(1,5,10)
-    r=runif(1,0.1,.5)
-    mu=runif(1,500,1500)
+    r=runif(1,0.2,.4)
+    mu=runif(1,200,500)
     Dat.matern=rMatClust(kappa,r,mu)  
     X=round((x.len)*Dat.matern$x+0.5)
     Y=round((x.len)*Dat.matern$y+0.5)
@@ -36,7 +36,34 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=20){
     Grid=matrix(0,x.len,x.len)
     for(i in 1:length(X))Grid[X[i],Y[i]]=Grid[X[i],Y[i]]+1
     Covs[,icov]=Grid/max(as.vector(Grid))
-  }  
+  } 
+  
+  PLOT=FALSE
+  if(PLOT==TRUE)
+    set.seed(1111)
+    kappa=runif(1,5,10)
+    r=runif(1,0.2,.4)
+    mu=runif(1,200,500)
+    Dat.matern=rMatClust(kappa,r,mu)  
+    X=round((x.len)*Dat.matern$x+0.5)
+    Y=round((x.len)*Dat.matern$y+0.5)
+    X[X<1]=1
+    Y[Y<1]=1
+    X[X>x.len]=x.len
+    Y[Y>x.len]=x.len
+    Grid=matrix(0,x.len,x.len)
+    for(i in 1:length(X))Grid[X[i],Y[i]]=Grid[X[i],Y[i]]+1
+    Cov=Grid/max(as.vector(Grid))
+    XY=data.frame(x=Dat.matern$x,y=Dat.matern$y)
+    Grid=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Cov))
+    library(ggplot2)
+    Pt.plot=ggplot()+geom_point(data=XY,aes(x=x,y=y))+theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("A.")
+    Grid.plot=ggplot()+geom_raster(data=Grid,aes(x=x,y=y,fill=cov))+theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("B.")
+    pdf(file="MaternCov.pdf")
+    library(gridExtra)
+    grid.arrange(arrangeGrob(Pt.plot,Grid.plot,nrow=2))
+    dev.off()
+  }
 
   col.names="cov1"
   if(n.covs>1){
@@ -45,9 +72,9 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=20){
   colnames(Covs)=col.names
   
   X=model.matrix(~poly(Covs,degree=2,raw=TRUE))
-  Beta=c(rnorm(1,3,0.5),rnorm(2*n.covs+gamma(n.covs),0,0.8))
+  Beta=c(rnorm(1,2.5,0.5),rnorm(2*n.covs+gamma(n.covs),0,0.8))
   
-  Lambda=X%*%Beta+rrw(tau.eta*Q)+rnorm(S,0,sqrt(1/tau.epsilon))
+  Lambda=X%*%Beta+rnorm(S,0,sqrt(1/tau.epsilon))
   
   N=rpois(S,exp(Lambda))
   
@@ -63,6 +90,8 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=20){
   #p1   
   return(Data)
 }
+
+
 
 sim_effort<-function(Data,S,formula=NULL,type,prop.sampled=0.1,n.points=round(0.1*S)){
   x.len=sqrt(S)
@@ -93,19 +122,7 @@ sim_effort<-function(Data,S,formula=NULL,type,prop.sampled=0.1,n.points=round(0.
   }
   if(type=="random"){
     Mapping=sample(c(1:S),n.points,replace=FALSE)
-    Counts=rbinom(n.points,Data[,"N"][Mapping],prop.sampled)
   }
-  
+  Counts=rbinom(n.points,Data[,"N"][Mapping],prop.sampled)
+  Effort=data.frame(Mapping=Mapping,Counts=Counts)  
 }  
-Coords.y=unique(coordinates(Data$Grid[[1]])[,1])
-Effort=data.frame(Cell=rep(NA,n.transects*t.steps*sqrt(S)),Time=rep(1:t.steps,each=n.transects*sqrt(S)),AreaSurveyed=rep(line.width,t.steps*n.transects*sqrt(S)))
-cur.pl=1
-for(it in 1:t.steps){
-  #first transect
-  Cur.y=sample(Coords.y,n.transects)
-  Sampled=which(coordinates(Data$Grid[[1]])[,1]%in%Cur.y)
-  Effort[cur.pl:(cur.pl+length(Sampled)-1),1]=Sampled
-  cur.pl=cur.pl+length(Sampled)
-}
-Effort
-}
