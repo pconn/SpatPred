@@ -123,6 +123,10 @@ d_biv_normal<-function(Tmp.vec,XY,Sigma){
 #' @keywords abundance map, plot
 #' @author Paul Conn \email{paul.conn@@noaa.gov}
 plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundance"){
+  library(sp)
+  library(RColorBrewer)
+  myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
+  
   Tmp=Grid[[1]]
   if(is.null(highlight)==FALSE){
     midpoints=data.frame(gCentroid(Tmp[highlight,],byid=TRUE))
@@ -134,7 +138,7 @@ plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundan
   new.colnames[1:2]=c("Easting","Northing")
   colnames(Cur.df)=new.colnames
   tmp.theme=theme(axis.ticks = element_blank(), axis.text = element_blank())
-  p1=ggplot(Cur.df)+aes(Easting,Northing,fill=Abundance)+geom_raster()+tmp.theme+scale_fill_continuous(name=leg.title)
+  p1=ggplot(Cur.df)+aes(Easting,Northing,fill=Abundance)+geom_raster()+tmp.theme+scale_fill_gradientn(colours=myPalette(100))
   if(is.null(highlight)==FALSE){
     #p1=p1+geom_rect(data=midpoints,size=0.5,fill=NA,colour="yellow",aes(xmin=Easting-25067,xmax=Easting,ymin=Northing,ymax=Northing+25067))
     p1=p1+geom_rect(data=midpoints,size=0.5,fill=NA,colour="yellow",aes(xmin=Easting-1/2,xmax=Easting+1/2,ymin=Northing-1/2,ymax=Northing+1/2))

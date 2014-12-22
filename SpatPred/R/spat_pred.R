@@ -1,8 +1,7 @@
 #' function to perform Bayesian analysis of log Gaussian Cox processes and to make spatial predictions 
 #' @param formula A formula object specifying the model for the fixed effects
-#' @param Data   A SpatialPolygongsDataFrame holding covariate values for all cells one wants to make predictions on (including sampled cells)
-#'  The data frame should also include a column, "Count" which gives the response variable (only values associated with surveyed cells will be modeled.)
-#' @param Mapping  A vector giving the habitat cell id number for each surveyed cell
+#' @param Data   A SpatialPolygonsDataFrame holding covariate values for all cells one wants to make predictions on (including sampled cells)
+#' @param Effort A list including "Counts" which gives the response variable for surveyed cells, and "Mapping" which is a vector indicating which sample unit is associated with which count
 #' @param Area.adjust   A vector allowing for differences in suitable habitat for each cell.  Can be used for different grid cell sizes or different
 #'        proportions of suitable habitat (e.g., 1.0 = 100% of habitat is suitable for the focal species)
 #' @param Offset	A vector giving the fraction of each grid cell in Mapping that was surveyed
@@ -11,7 +10,7 @@
 #' @param Assoc   Association matrix for all grid cells in Data (needed for ICAR models only)
 #' @param K   A (# cells)x(# knots) matrix - the 'K' matrix for process convolution modeling.  
 #' @param Names.gam A character vector giving the column names of Data that will be modeled as smooth effects
-#' @param Knots.gam A list vector, where each entry is a matrix (default NULL)
+#' @param Knots.gam A list vector (length is # of smooth params), where each list element is a vector providing locations of knots (one location for each knot)
 #' @param Control A list giving MCMC controls and additional model options
 #'  "iter": number of MCMC iterations;
 #'  "burnin": number of MCMC burnin iterations;
@@ -21,7 +20,7 @@
 #'  "MH.nu" A vector providing continuous Uniform half-range values for Metropolis-Hastings proposals
 #'  "adapt" If true, adapts tuning parameters for nu updates; e.g., one could run a chain with adapt=TRUE, and use adapted MH tuning parameters in a longer analysis (default FALSE)
 #'  "fix.tau.epsilon" If TRUE, fixes tau.epsilon to 100
-#'  "kern.gam.cv" Sets gam cv for kernels
+#'  "Kern.gam.se" A vector setting gam se for kernels (length is number of smooth params)
 #' @param Prior.pars  An optional list giving prior parameters; these include
 #'  "beta.tau" precision for Gaussian prior on regression parameters (default 0.1)
 #'  "a.eps" alpha parameter for tau_epsilon~Gamma(alpha,beta) (default = 1.0)
@@ -37,7 +36,7 @@
 #' @keywords areal model, data augmentation, mcmc, spatial prediction
 #' @author Paul B. Conn \email{paul.conn@@noaa.gov} 
 #' @examples print("Later!")
-spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,Assoc=NULL,K=NULL,Names.gam=NULL,Knots.gam=NULL,Prior.pars=NULL,Precision.pars=NULL){
+spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,Assoc=NULL,K=NULL,Names.gam=NULL,Knots.gam=NULL,Prior.pars=NULL,Precision.pars=NULL){
   require(Matrix)
   require(mvtnorm)
   require(rgeos)
@@ -54,7 +53,8 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
     a.gam=1,
     b.gam=0.01)
   }
-  Count=Data@data[,"Count"][Mapping]
+  Count=Effort$Counts
+  Mapping=Effort$Mapping
   Offset=Offset*Area.adjust[Mapping]
   Log.offset=log(Offset)
   Log.area.adjust=log(Area.adjust)
@@ -80,6 +80,7 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
   XpXinv=solve(crossprod(X.obs)) 
   XpXinvXp=XpXinv%*%t(X.obs)
 
+
   #GAM stuff
   if(is.null(Names.gam)==FALSE){
     n.smooths=length(Names.gam)
@@ -90,16 +91,18 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
       for(iknot in 1:length(Knots.gam[[icov]])){
         Tmp[[icov]][,iknot]=dnorm(Data@data[,Names.gam[icov]],Knots.gam[[icov]][iknot],Control$Kern.gam.sd[icov])
       }
-      Tmp[[icov]]=Tmp[[icov]]/rowSums(Tmp[[icov]])
+      #Tmp[[icov]]=Tmp[[icov]]/rowSums(Tmp[[icov]])  #this produces singular KpK if >1 smooth term
     }
     K.gam=Tmp[[1]]
     if(n.smooths>1){
       for(icov in 2:n.smooths)K.gam=cbind(K.gam,Tmp[[icov]])
     }
+    #K.gam=K.gam/apply(K.gam,1,'sum')  don't do this - multimodal GAMs!
     n.alpha=ncol(K.gam)
     Alpha=rep(0,n.alpha)
-    cross.K.gam=crossprod(K.gam)
+    cross.K.gam=crossprod(K.gam[Mapping,])
     Alpha.mc=matrix(0,n.alpha,mcmc.length)
+    KpKinv.gam=solve(cross.K.gam)
   }
   Gamma=rep(0,S)  #combined smooth effects by site
   
@@ -108,7 +111,7 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
   Nu[Mapping]=Count/Offset
   Nu[which(Nu==0)]=min(Nu[which(Nu>0)])
   #Nu[Which.not.sampled]=mean(Nu[Mapping])
-  Nu=log(Nu)
+  Nu=log(Nu)+rnorm(S,0,0.05)
   Beta=rep(0,n.beta)
   Beta[1]=mean(Nu) #set intercept to reasonable starting value
   Beta.mc=matrix(0,n.beta,mcmc.length)
@@ -164,6 +167,11 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
     Theta=rnorm(n.theta,0,sqrt(1/tau.eta))
   }
   
+  if(is.null(Names.gam)==FALSE & n.beta==1){
+    Beta[1]=0
+    n.beta=0
+  }
+    
   set.seed(12345)
   
   for(iiter in 1:Control$iter){
@@ -180,9 +188,11 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
     
     #simulate nu for unsampled cells at each iteration IF using CAR model (otherwise just do for iterations where MCMC is stored)
     if(spat.mod==2)Nu[Which.not.sampled]=rnorm(n.no,X.no%*%Beta+Eta[Which.not.sampled]+Gamma[Which.not.sampled],sqrt(1/tau.epsilon))
-    
+    #Nu=Nu.true
+    #Nu=log(Data@data[["Lambda"]])
+
     #update beta
-    Beta=t(rmvnorm(1,XpXinvXp%*%Nu[Mapping],XpXinv/(tau.epsilon+Prior.pars$beta.tau)))
+    if(n.beta>0)Beta=t(rmvnorm(1,XpXinvXp%*%(Nu[Mapping]-Eta[Mapping]-Gamma[Mapping]),XpXinv/(tau.epsilon+Prior.pars$beta.tau)))
     
     #update precision for exchangeable errors
     if(Control$fix.tau.epsilon==FALSE & is.null(Precision.pars)==TRUE){
@@ -214,11 +224,14 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
     
     #update GAM parameters
     if(is.null(Names.gam)==FALSE){
-      Dat.minus.Exp=Nu-X.pred%*%Beta-Eta
+      Dat.minus.Exp=Nu[Mapping]-X.obs%*%Beta-Eta[Mapping]
+      #Alpha=rmvnorm(1,KpKinv.gam%*%crossprod(K.gam[Mapping,],Dat.minus.Exp),KpKinv.gam/(tau.epsilon+tau.alpha))
       V.alpha.inv <- cross.K.gam*tau.epsilon + diag(tau.alpha,nrow=n.alpha)
-      M.alpha <- solve(V.alpha.inv,tau.epsilon*t(K.gam)%*%Dat.minus.Exp)
+      #V.alpha.inv <- cross.K.gam*(tau.epsilon +tau.alpha)
+      M.alpha <- solve(V.alpha.inv,tau.epsilon*t(K.gam[Mapping,])%*%Dat.minus.Exp)
       Alpha <- M.alpha + solve(chol(as.matrix(V.alpha.inv)), rnorm(n.alpha,0,1))
       Gamma=as.numeric(K.gam%*%Alpha)
+      #Gamma=as.numeric(K.gam%*%t(Alpha))
       #update tau.alpha
       tau.alpha <- rgamma(1,n.alpha*0.5 + Prior.pars$a.gam,as.numeric(0.5*crossprod(Alpha)) + Prior.pars$b.gam)    
     }
@@ -244,7 +257,7 @@ spat_pred<-function(formula,Data,spat.mod=0,Offset,Mapping,Area.adjust,Control,A
       if(spat.mod>=1)Tau.eta.mc[(iiter-Control$burnin)/Control$thin]=tau.eta
       if(Control$predict==TRUE){ #make predictions
         #simulate nu if not an ICAR model
-        if(spat.mod<2)Nu[Which.not.sampled]=rnorm(n.no,X.no%*%Beta+Eta[Which.not.sampled],sqrt(1/tau.epsilon))
+        if(spat.mod<2)Nu[Which.not.sampled]=rnorm(n.no,X.no%*%Beta+Gamma[Which.not.sampled]+Eta[Which.not.sampled],sqrt(1/tau.epsilon))
         #posterior predictions of abundance across landscape
         Pred.mc[,(iiter-Control$burnin)/Control$thin]=rpois(S,exp(Log.area.adjust+Nu))    
       }

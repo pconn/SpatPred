@@ -1,132 +1,119 @@
 # run_generic_sims.R
 # script to run generic spatio-temporal count data simulations
 source("./SpatPred/R/sim_data_abundance.R")
-set.seed(12345)
-n.sims=100 #number of simulations at each design point
-S=400
-t.steps=20
-n.transects=5
-line.width=0.1
+source("./SpatPred/R/util_funcs.R")
+
+set.seed(123456)
+n.sims=1#number of simulations at each design point
+S=900
+prop.sampled=0.1
+n.transects=60
 
 i.sim=TRUE
 if(i.sim){
   for(isim in 1:n.sims){
     #simulate covariates, abundance
-    Grid=sim_data_generic(S,n.transects,n.covs=4,line.width=,tau.epsilon=20)
+    Grid=sim_data_generic(S=S,n.covs=4,tau.epsilon=10)
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
     save(Grid,file=Cur.file)
+  }
+  #now simulate count datasets (could possibly use clustered "convenience" sampling, but just using random right now)
+  for(isim in 1:n.sims){
+    Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
+    load(Cur.file)
+    Effort=sim_effort(Data=Grid,S=S,formula=NULL,type="random",prop.sampled=prop.sampled,n.points=n.transects)
+    Cur.file=paste("./Sim_data/Effort_random",isim,".Rda",sep='')
+    save(Effort,file=Cur.file)
   }
 }
 
 
-#now simulate 
-for(isim in 1:n.sims){
-  Cur.file=paste("./Sim_data/Sim",isim,".Rda",sep='')
-  load(Cur.file)
-  
-}
+
 
 #s
 
 
 #call estimation routines
-Est.mods=c("CPIF","AST","STPC","OPRS")
-Sim.ind.20= c(1:19)*5
-for(igen in 1:3){  #loop over generating model to generate data sets
-  for(itrans in 1:1){ #loop over number of transects in each cell
-    for(isim in 1:(n.sims/2)){  
+Adj=square_adj(sqrt(S))
+for(igen in 1:1){  #loop over generating model to generate data sets
+  for(isim in 1:n.sims){  
+    Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
+    load(Cur.file) #load abundance,covariate grid
+    
+    Cur.file=paste("./Sim_data/Effort_random",isim,".Rda",sep='')
+    load(Cur.file) #load Effort 
+    
+    n.transects=length(Effort$Mapping)
+    Grid$cov1.quad=Grid$cov1^2
+    Grid$cov2.quad=Grid$cov2^2
+    Grid$cov3.quad=Grid$cov3^2
+    Grid$cov12=Grid$cov1*Grid$cov2
+    Grid$cov13=Grid$cov1*Grid$cov3
+    Grid$cov23=Grid$cov2*Grid$cov3
+    Offset=rep(prop.sampled,n.transects)
+    Area.adjust=rep(1,S)   
+    
+    #estimation model 1: GLM
+    formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
+    #formula=~cov1+cov1.quad
+    spatmod=0
+    Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
+    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
+    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
+    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)    
+    
+    Grid.list=vector("list",1)
+    Grid.list[[1]]=Grid
+    plot_N_map(1,matrix(Grid@data$N,S,1),Grid=Grid.list,leg.title="True Abundance")
+    plot_N_map(1,matrix(Grid@data$cov1,S,1),Grid=Grid.list,leg.title="True Abundance")
+    plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=Effort$Mapping)
+    plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance")
+    plot_N_map(1,matrix(MCMC$Eta,S,1),Grid=Grid.list,leg.title="Abundance")
+    
+    
+    #estimation model 2: GAM
+    formula=~1  #if no fixed effects, use intercept model; if fixed effects, specify intercept=0
+    spatmod=0
+    Names.gam=c("cov1","cov2","cov3") #A character vector giving the column names of Data that will be modeled as smooth effects
+    #Names.gam=c("cov1","cov2","cov3") #A character vector giving the column names of Data that will be modeled as smooth effects
+    #Names.gam="cov1"
+    n.par=length(Names.gam)
+    Knots.gam=vector("list",n.par) 
+    Kern.gam.sd=rep(0,n.par)
+    N.knots=rep(4,n.par) #number of knots for each parameter
+    for(ipar in 1:n.par){
+      cur.max=max(Grid[[Names.gam[ipar]]])
+      #quants=c(0:(N.knots[ipar]-1))/(N.knots[ipar]-1)  
+      #Knots.gam[[ipar]]=quantile(Grid[[Names.gam[ipar]]],quants)  #quantiles are often used but can lead to numerical problems when automated (e.g. if 2 quantiles are the same)
+      Knots.gam[[ipar]]=(c(1:N.knots[ipar])-1)/(N.knots[ipar]-1)*cur.max
+      Kern.gam.sd[ipar]=cur.max/(N.knots[ipar]-1)
+      Knots.gam[[ipar]]=c(-0.333,Knots.gam[[ipar]],1.333)
+    }
+    Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE,Kern.gam.sd=Kern.gam.sd)
+    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL,Names.gam=Names.gam,Knots.gam=Knots.gam)
+    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.sd=Kern.gam.sd)
+    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL,Names.gam=Names.gam,Knots.gam=Knots.gam)
 
-      if(igen==3){
-        fname=paste("simdata_gen",Model.list[igen-1],"_trans",N.transects[itrans],"_sim",isim,sep='')
-        load(paste("./sim_generic_data/",fname,sep=''))
-        Which.distances=Sim.data$Data$Which.distances  
-      }
-      
-      fname=paste("simdata_gen",Model.list[igen],"_trans",N.transects[itrans],"_sim",isim,sep='')
-      load(paste("./sim_generic_data/",fname,sep=''))
-      Data=Sim.data$Data
-      if(igen==3)Data$Which.distances=Which.distances
-      
-      n.knots=length(Data$Knot.locations)
-      #calculate kernel densities at grid cell centroids 
-      Cell.centroids=gCentroid(Data$Grid[[1]],byid=TRUE)
-      Distances=gDistance(Data$Knot.locations,Cell.centroids,byid=TRUE)
-      K=matrix(dnorm(Distances,0,5),S,n.knots)  #knot sd=5 
-      K=K/rowSums(K)          
-      Data$K=K
-      
-      #Data$Count.data=Data$Count.data[-which(Data$Count.data[,"Time"]%in%c(3,4,10)),]
-        
-      for(iest in 1:1){ #loop over estimation model
-        
-        run.flag=0
-        if(Est.mods[iest]=="CPIF"){
-          if(itrans==1 & isim%in%Sim.ind.10){
-            #Control=list(iter=5000,burnin=4000,thin=1000,predict=FALSE,MH.N=0.05,MH.omega=rep(0.04,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            Control=list(iter=5000,burnin=10,thin=10,predict=TRUE,MH.N=0.05,MH.omega=rep(0.04,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_CPIF(model=~0+matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)            
-            Control=list(iter=110000,burnin=10000,thin=50,predict=TRUE,MH.N=MCMC$Control$MH.N,MH.omega=MCMC$Control$MH.omega,adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_CPIF(model=~0+matern+matern2,Prior.pars=NULL,Data=Data,Control=Control) 
-            run.flag=1
-          } 
-          if(itrans==2){
-            Control=list(iter=5000,burnin=4000,thin=1000,predict=FALSE,MH.N=0.05,MH.omega=rep(0.04,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_CPIF(model=~0+matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)            
-            Control=list(iter=20000,burnin=10000,thin=5,predict=TRUE,MH.N=MCMC$Control$MH.N,MH.omega=MCMC$Control$MH.omega,adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_CPIF(model=~0+matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)  
-            run.flag=1
-          }
-        } 
-        
-        if(Est.mods[iest]=="AST"){
-          if(itrans==1){
-            Control=list(iter=5000,burnin=10,thin=10,predict=TRUE,MH.mu=rep(0.2,nrow(Data$Count.data)),MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_AST(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)
-            Control=list(iter=30000,burnin=10000,thin=10,predict=TRUE,MH.mu=MCMC$Control$MH.mu,MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_AST(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)  
-            run.flag=1
-          }
-          if(itrans==2){
-            Control=list(iter=5000,burnin=100,thin=1000,predict=FALSE,MH.mu=rep(0.2,nrow(Data$Count.data)),MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_AST(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)
-            Control=list(iter=20000,burnin=10000,thin=5,predict=TRUE,MH.mu=MCMC$Control$MH.mu,MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_AST(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control) 
-            run.flag=1
-          }
-        }        
-        
-        
-        if(Est.mods[iest]=="STPC"){
-          if(itrans==1 & isim%in%Sim.ind.10){
-            Control=list(iter=5000,burnin=10,thin=10,srr.tol=0.5,predict=TRUE,MH.mu=rep(0.2,nrow(Data$Count.data)),MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_STPC(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)
-            Control=list(iter=110000,burnin=10000,thin=50,srr.tol=0.5,predict=TRUE,MH.mu=MCMC$Control$MH.mu,MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_STPC(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)   
-            run.flag=1
-          }
-          if(itrans==2){
-            Control=list(iter=5000,burnin=100,thin=1000,srr.tol=0.5,predict=FALSE,MH.mu=rep(0.2,nrow(Data$Count.data)),MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=TRUE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_STPC(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)
-            Control=list(iter=20000,burnin=10000,thin=50,srr.tol=0.5,predict=TRUE,MH.mu=MCMC$Control$MH.mu,MH.N=0.05,MH.omega=rep(0.05,t.steps),adapt=FALSE,fix.tau.epsilon=FALSE)        
-            MCMC=mcmc_STPC(model=~matern+matern2,Prior.pars=NULL,Data=Data,Control=Control)  
-            run.flag=1
-          }          
-        }
-
-        if(Est.mods[iest]=="OPRS" & itrans==2 & isim%in%Sim.ind.10){
-          Control=list(iter=5000,burnin=4000,thin=1000,predict=FALSE,MH.Z=rep(0.08,t.steps),MH.mu=rep(0.1,S),MH.N=0.05,MH.omega=rep(0.05,t.steps),MH.beta=c(.05,0.1,0.2),MH.tau.d=0.5,adapt=TRUE,fix.tau.epsilon=FALSE,fix.tau.varepsilon=TRUE)
-          model=~0+matern+matern2
-          Predictors=c("matern","matern2")
-          MCMC=mcmc_OPRS(Predictors=Predictors,Data=Data,Control=Control)
-          Control=list(iter=20000,burnin=10000,thin=5,predict=TRUE,MH.Z=MCMC$Control$MH.Z,MH.mu=rep(0.1,S),MH.N=0.05,MH.omega=rep(0.05,t.steps),MH.beta=MCMC$Control$MH.beta,MH.tau.d=MCMC$Control$MH.tau.d,adapt=TRUE,fix.tau.epsilon=FALSE,fix.tau.varepsilon=TRUE)
-          model=~0+matern+matern2
-          Predictors=c("matern","matern2")
-          MCMC=mcmc_OPRS(Predictors=Predictors,Data=Data,Control=Control) 
-          run.flag=1
-        }  
-        
-        out.file=paste("d:/ST_out/ST_out_gen",igen,"_est_",Est.mods[iest],"_trans_",itrans,"_sim",isim,".Rdata",sep="")
-        if(run.flag==1)save(MCMC,file=out.file)
+    
+    par(mfrow=c(3,2))
+    for(ipar in 1:6){
+      #x=c(0:100)/100*Knots.gam[[ipar]][4]
+      cur.col=(ipar-1)*4+1
+      K.tmp=MCMC$K.gam[,cur.col:(cur.col+N.knots[ipar]-1)]
+      Cur.alpha=apply(MCMC$MCMC$Alpha[cur.col:(cur.col+N.knots[ipar]-1),],1,'median')
+      plot(Grid@data[,Names.gam[ipar]],K.tmp%*%Cur.alpha,main=paste(Names.gam[ipar]))
+    }
+    
+    
+    #estimation model 3: RSR
+    spat.mod=2
+    formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
+    #formula=~1
+    Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE)
+    MCMC=spat_pred(formula=formula,spat.mod=spat.mod,Assoc=Adj,Data=Grid,Effort=Effort,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
+    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE)
+    MCMC=spat_pred(formula=formula,spat.mod=spat.mod,Assoc=Adj,Data=Grid,Effort=Effort,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
+    
  
         #save results of MCMC run as .Rdata
         

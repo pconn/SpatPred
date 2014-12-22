@@ -78,27 +78,20 @@ We employed a simulation study to examine the ability of the generalized indepen
 We now describe each of these tasks and results of the simulation study in further detail.  All analyses were performed in the R programming environment \citep{RTeam2012}; requisite code to recreate analyses is available in the supplement.
 
 \underline{1. Simulating environmental covariates} \\
-For each simulation, we generated environmental covariates by discretizing the realizations of a Matern Cluster Process (Fig. \ref{fig:Matern}) using the rMatClust function within the R \texttt{spatstat} package \citep{BaddeleyTurner2005}.  The Matern Cluster Process is a point process that includes a total of $\kappa$ cluster centers.  Within a radius $r$ for each cluster center, a total of $n$ points are randomly distributed, where $n \sim \text{Poisson}(\lambda)$ (e.g. Fig. \ref{fig:Matern}).  For each simulated covariate, we drew $\kappa \sim U(5,10)$, $r \sim U(0.2,0.4)$, and $\lambda \sim U(200,500)$ to provide variation in the relative density and clustering for each covariate.  Next, we overlayed a 30 by 30 grid over simulated points.  To generate a hypothetical covariate, we then summed the number of points within each grid cell, and standardized so that the maximum covariate value was 1.0 (e.g. \ref{fig:Matern}).
+For each simulation, we generated environmental covariates by discretizing the realizations of a Matern Cluster Process (Fig. \ref{fig:Matern}) using the rMatClust function within the R \texttt{spatstat} package \citep{BaddeleyTurner2005}.  The Matern Cluster Process is a point process that includes a total of $\kappa$ cluster centers.  Within a radius $r$ for each cluster center, a total of $n$ points are randomly distributed, where $n \sim \text{Poisson}(\lambda)$ (e.g. Fig. \ref{fig:Matern}).  For each simulated covariate, we drew $\kappa \sim U(5,10)$, $r \sim U(0.2,0.4)$, and $\lambda \sim U(200,500)$ to provide variation in the relative density and clustering for each covariate.  Next, we overlayed a 30 by 30 grid over simulated points.  To generate a hypothetical covariate, we then summed the number of points within each grid cell, and standardized so that the maximum covariate value was 1.0 (e.g. Fig. \ref{fig:Matern}).
 
 
-\begin{figure}[!h]
-\begin{center}
-\includegraphics[width=6in]{MaternCov.pdf}
-\end{center}
-\caption{Environmental covariates were generated via a discretized Matern Cluster Process.  First, a Matern Cluster Process (A.) is simulated.  Next, the number of simulated points in each grid cell is counted and standardized to have a maximum of 1.0 (B.).} 
-\label{fig:Matern}
-\end{figure}
 
 \underline{2. Simulating animal abundance} \\
 
 Given values of the four simulated covariates, we generated a vector of expected log-abundance in each cell ($\boldsymbol{\mu}$) as
 \begin{linenomath}
 \begin{equation*}
-  $\boldsymbol{\mu}$ = \beta_0 + {\bf X}\boldsymbol{\beta} + \boldsymbol{\epsilon},
+  \boldsymbol{\mu} = \beta_0 + {\bf X}\boldsymbol{\beta} + \boldsymbol{\epsilon},
 \end{equation*}
 \end{linenomath}
 where the intercept, $\beta_0$, was drawn from a $\mathcal{N}(2.5,0.25)$ distribution, the other regression coefficients ($\boldsymbol{\beta}$) were each drawn from a $\mathcal{N}(0,0.8)$ distribution, and residual Gaussian errors ($\boldsymbol{\epsilon}$) were drawn from a $\mathcal{N}(0,0.1)$ distribution.  The design matrix ${\bf X}$ was constructed assuming linear and quadratic effects for each covariate, together with all one-way interactions for a total of 14 regression coefficients in addition to the intercept.
-Next, abundance in each cell $i$ was generated as  
+Next, abundance in each cell $i$ was generated as
 \begin{linenomath}
 \begin{equation*}
   N_i \sim \text{Poisson}(\exp(\mu_i)).
@@ -127,6 +120,17 @@ For each set of count data, we attempted to estimate animal abundance over the l
 \bibliography{master_bib}
 
 \end{flushleft}
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[width=6in]{MaternCov.pdf}
+\end{center}
+\caption{Environmental covariates were generated via a discretized Matern Cluster Process.  First, a Matern Cluster Process (A.) is simulated.  Next, the number of simulated points in each grid cell is counted and standardized to have a maximum of 1.0 (B.).}
+\label{fig:Matern}
+\end{figure}
+
+
+
 \end{document}
 
 
