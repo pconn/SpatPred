@@ -1,4 +1,5 @@
 source("./SpatPred/R/spat_pred.R")
+source("./SpatPred/R/util_funcs.R")
 load('Ribbon_data.Rda')
 load('Knot_cell_distances.Rdata')
 K=K.data$K
@@ -37,7 +38,7 @@ formula=Count~dist_mainland+dist_shelf+ice_conc+ice_conc2+dist_edge
 
 
 
-Control=list(iter=11000,burnin=1000,thin=2,adapt=TRUE,srr.tol=NULL,fix.tau.epsilon=FALSE,predict=TRUE,MH.nu=rep(0.2,length(Mapping)))
+Control=list(iter=11000,burnin=1000,thin=2,adapt=TRUE,srr.tol=NULL,fix.tau.epsilon=FALSE,predict=TRUE,MH.nu=rep(0.5,length(Mapping)))
 Data=Cur.grid
 spat.mod=0
 Offset=Area.photo
@@ -48,13 +49,24 @@ Prior.pars=NULL
 #formula=Count~Ecoregion
 #formula=Count~dist_mainland+dist_shelf+ice_conc+ice_conc2+dist_edge+Ecoregion
 #formula=Count~dist_mainland+dist_shelf+depth+ice_conc+ice_conc2+dist_edge+Ecoregion
-glm.out <- spat_pred(formula=formula,Data=Data,spat.mod=spat.mod,Offset=Offset,Mapping=Mapping,Area.adjust=Area.adjust,Control=Control,Assoc=Assoc,Knots=Knots,Prior.pars=Prior.pars)
+Effort=list(Mapping=Mapping,Counts=Data$Count[Mapping])
+glm.out <- spat_pred(formula=formula,Data=Data,spat.mod=spat.mod,Offset=Offset,Effort=Effort,Area.adjust=Area.adjust,Control=Control,Assoc=Assoc,Knots=Knots,Prior.pars=Prior.pars)
 Control=glm.out$Control
 Control$adapt=FALSE
 Control$iter=60000
 Control$burnin=10000
 Control$thin=10
-glm.out.cov <- spat_pred(formula=formula,Data=Data,spat.mod=spat.mod,Offset=Offset,Mapping=Mapping,Area.adjust=Area.adjust,Control=Control,Assoc=Assoc,Knots=Knots,Prior.pars=Prior.pars)
+glm.out.cov <- spat_pred(formula=formula,Data=Data,spat.mod=spat.mod,Offset=Offset,Effort=Effort,Area.adjust=Area.adjust,Control=Control,Assoc=Assoc,Knots=Knots,Prior.pars=Prior.pars)
+
+Grid.list=vector("list",1)
+Grid.list[[1]]=Cur.grid
+plot_N_map(1,matrix(apply(glm.out.cov$MCMC$Pred,1,'mean'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=Effort$Mapping)
+#plot_N_map(1,matrix(apply(MCMC.RSR$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=which(MCMC.RSR$gIVH2==0))
+#plot_N_map(1,matrix(MCMC$Eta,S,1),Grid=Grid.list,leg.title="Abundance")
+#Var=apply(MCMC$MCMC$Pred,1,'var')
+#plot_N_map(1,matrix(Var,S,1),Grid=Grid.list,leg.title="Pred variance")
+
+
 
 #determine which points outside of IVF
 X.pred=model.matrix(formula,data=Data@data)

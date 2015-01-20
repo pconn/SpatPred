@@ -72,7 +72,7 @@ for(itau1 in 1:4){
   for(itau2 in 1:4){
     counter=counter+1
     Precision.pars=list(tau.epsilon=Tau.vec[itau1],tau.eta=Tau.vec[itau2])
-    Control$srr.tol=50
+    Control$srr.tol=0.5
     #Control$srr.tol=200
     Control$fix.tau.epsilon=FALSE
     #formula=Count~1

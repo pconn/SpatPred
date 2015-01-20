@@ -1,6 +1,6 @@
 ### calculate prior prediction variance/gIVH via Monte Carlo
 
-gIVH <- function(Data,Effort,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,srr.tol=0.8){
+gIVH <- function(Data,Effort,spat.mod=1,K=NULL,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,srr.tol=0.8){
   n.reps=1000
   X.pred=model.matrix(my.formula,data=Data@data)
   X.obs=model.matrix(my.formula,data=Data@data[Effort$Mapping,]) 
@@ -9,7 +9,18 @@ gIVH <- function(Data,Effort,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,
   n.beta=ncol(X.pred)
   I.beta=diag(nrow(XpXinv))
   
-  if(is.null(Assoc)==FALSE){
+  if(spat.mod==1 & is.null(K)==TRUE)cat("ERROR: User must provide K if spat.mod=1")
+  
+  if(spat.mod==1){ #define some matrices, etc. needed for PC model
+    n.knots=ncol(K)
+    K.t=t(K)
+    cross.K=crossprod(K)
+    Theta=rep(0,n.knots)
+    KpKinv=solve(cross.K) # add a little noise to make matrix non-singular
+    KpKinvKp=XpXinv%*%t(X.obs)
+  }
+  
+  if(spat.mod==2){
     Q=-Assoc
     diag(Q)=apply(Assoc,2,'sum')
     Q=Matrix(Q)  
@@ -41,7 +52,9 @@ gIVH <- function(Data,Effort,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,
   Lambda.mc=matrix(0,S,n.reps)
   Var.lambda=matrix(0,S,n.reps)
   #Var.obs=matrix(0,n.obs,n.reps)
-  X.aug=cbind(X.pred,L.t)
+  X.aug=X.pred
+  if(spat.mod==1)X.aug=cbind(X.aug,K)
+  if(spat.mod==2)X.aug=cbind(X.aug,L.t)
   
   for(irep in 1:n.reps){
     tau.beta<-runif(1,Tau.beta[1],Tau.beta[2])
@@ -50,7 +63,9 @@ gIVH <- function(Data,Effort,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,
    #Beta<-tcrossprod(backsolve(chol(tau.beta*XpXinv),I.beta))
     tau.eta<-runif(1,Tau.eta[1],Tau.eta[2])
     Theta=0
-    if(is.null(Assoc)==FALSE)Theta<-matrix(rmvnorm(1,rep(0,n.theta),1/tau.eta*as.matrix(Qt)),n.theta,1)     #tcrossprod(backsolve(chol(tau.eta*Qt),I.eta))
+    if(spat.mod==1)Theta<-matrix(rmvnorm(1,rep(0,n.theta),1/tau.eta*as.matrix(Qt)),n.theta,1) 
+    if(spat.mod==2)Theta<-matrix(rmvnorm(1,rep(0,n.theta),1/tau.eta*as.matrix(Qt)),n.theta,1)     
+
     #Lambda.mc[,irep]=exp(X.pred%*%Beta+L.t%*%Theta+rnorm(S,0,1/sqrt(runif(1,Tau.epsilon[1],Tau.epsilon[2]))))
     Lambda=exp(X.pred%*%Beta+L.t%*%Theta+rnorm(S,0,1/sqrt(runif(1,Tau.epsilon[1],Tau.epsilon[2]))))
     Lambda.mc[,irep]=Lambda

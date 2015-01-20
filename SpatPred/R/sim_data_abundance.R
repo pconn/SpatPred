@@ -11,8 +11,11 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
   require(Matrix)
   require(spatstat)
   require(sp)
+  require(RandomFields)
   
   DEBUG=FALSE   
+  PLOT=FALSE
+  if(PLOT)set.seed(11111)
   tau.epsilon=100
   #if(DEBUG)tau.epsilon=100
   
@@ -22,52 +25,71 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
   
   x.len=sqrt(S)
  
-  #generate Covariates from a Matern distribution
-  Covs=data.frame(matrix(0,S,n.covs))
-  for(icov in 1:n.covs){
-    kappa=runif(1,5,10)
-    r=runif(1,0.2,.4)
-    mu=runif(1,200,500)
-    Dat.matern=rMatClust(kappa,r,mu)  
-    X=round((x.len)*Dat.matern$x+0.5)
-    Y=round((x.len)*Dat.matern$y+0.5)
-    X[X<1]=1
-    Y[Y<1]=1
-    X[X>x.len]=x.len
-    Y[Y>x.len]=x.len
-    Grid=matrix(0,x.len,x.len)
-    for(i in 1:length(X))Grid[X[i],Y[i]]=Grid[X[i],Y[i]]+1
-    Covs[,icov]=as.vector(Grid)/max(as.vector(Grid))
-    #Covs[,icov]=expit(logit(Covs[,icov])+rnorm(length(Grid),0,0.05)) # add a bit of noise
-    Which.0=which(Covs[,icov]==0)
-    if(length(Which.0)>0)Covs[,icov][Which.0]=abs(rnorm(length(Which.0),0,0.01))
-  } 
+  n.basis=10
+  n.zero=6
+  Omega=matrix(0,n.basis,S)
+  Cov=matrix(0,n.covs,S)
+  flag=1
+  while(flag==1){  #reject if any |cor|>0.75
+    for(i in 1:n.basis){
+      my.mod=RMexp(var=1,scale=runif(1,5,100))
+      Omega[i,]=RFsimulate(model=my.mod,x=c(1:x.len),y=c(1:x.len))$variable1
+    }
+    for(i in 1:n.covs){
+      Wts=matrix(rnorm(n.basis),1,n.basis)
+      Wts[sample(c(1:n.basis),n.zero)]=0
+      #cat(Wts)
+      #cat('\n')
+      Cov[i,]=Wts%*%Omega
+    }
+    Covs=t((Cov-rowMeans(Cov))/sqrt(apply(Cov,1,'var')))
+    cur.cor=max(abs(c(cor(Covs[,1],Covs[,2]),cor(Covs[,1],Covs[,3]),cor(Covs[,2],Covs[,3]))))
+    if(cur.cor<0.75)flag=0
+  }
+    
   
-  PLOT=FALSE
   if(PLOT==TRUE){
-    set.seed(1111)
-    kappa=runif(1,5,10)
-    r=runif(1,0.2,.4)
-    mu=runif(1,200,500)
-    Dat.matern=rMatClust(kappa,r,mu)  
-    X=round((x.len)*Dat.matern$x+0.5)
-    Y=round((x.len)*Dat.matern$y+0.5)
-    X[X<1]=1
-    Y[Y<1]=1
-    X[X>x.len]=x.len
-    Y[Y>x.len]=x.len
-    Grid=matrix(0,x.len,x.len)
-    for(i in 1:length(X))Grid[X[i],Y[i]]=Grid[X[i],Y[i]]+1
-    Cov=Grid/max(as.vector(Grid))
-    Cov=expit(logit(Cov)+rnorm(length(Grid),0,0.05)) # add a bit of noise
-    XY=data.frame(x=Dat.matern$x,y=Dat.matern$y)
-    Grid=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Cov))
+    #XY=data.frame(x=Dat.matern$x,y=Dat.matern$y)
+    Grid1=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Covs[,1]))
+    Grid2=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Covs[,2]))
+    Grid3=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Covs[,3]))
+    Grid=rbind(Grid1,Grid2,Grid3)
+    #Covariate=c(rep(1,S),rep(2,S),rep(3,S))
+    #Grid=cbind(Grid,Covariate)
     library(ggplot2)
-    Pt.plot=ggplot()+geom_point(data=XY,aes(x=x,y=y))+theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("A.")
-    Grid.plot=ggplot()+geom_raster(data=Grid,aes(x=x,y=y,fill=cov))+theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("B.")
-    pdf(file="MaternCov.pdf")
+    library(RColorBrewer)
+    myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
+    #Grid.plot=ggplot()+geom_raster(data=Grid,aes(x=x,y=y,fill=cov))+
+    #  theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+
+    #  ggtitle("A.")+scale_fill_gradientn(colours=myPalette(100))+facet_wrap(~Covariate)   
+    Grid.plot1=ggplot()+geom_raster(data=Grid1,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("A.")+scale_fill_gradientn(colours=myPalette(100))
+    Grid.plot2=ggplot()+geom_raster(data=Grid2,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("B.")+scale_fill_gradientn(colours=myPalette(100))
+    Grid.plot3=ggplot()+geom_raster(data=Grid3,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("C.")+scale_fill_gradientn(colours=myPalette(100))    
+    #now, iterate to produce a histogram of implied correlation coefficients
+    Cor=rep(0,1000)
+    for(irep in 1:1000){
+      #Omega=matrix(0,n.basis,S)
+      #Cov=matrix(0,n.covs,S)
+      my.mod=RMexp(var=1,scale=100)
+      for(i in 1:n.basis){
+        my.mod=RMexp(var=1,scale=runif(1,5,100))
+        Omega[i,]=RFsimulate(model=my.mod,x=c(1:x.len),y=c(1:x.len))$variable1
+      }
+      for(i in 1:2){
+        Wts=matrix(rnorm(n.basis),1,n.basis)
+        Wts[sample(c(1:n.basis),n.zero)]=0
+        Cov[i,]=Wts%*%Omega
+      }
+      Covs=t(Cov/apply(Cov,1,'max'))
+      Cor[irep]=cor(Covs[,1],Covs[,2])
+    }
+    Cor.df=data.frame(Cor=Cor)
+    
+    Cov.plot=ggplot()+geom_density(data=Cor.df,aes(x=Cor))+xlab("Correlation coefficient")+ylab("Density")+
+      theme(plot.title = element_text(hjust = 0),axis.text=element_text(size=rel(1.5)),title=element_text(size=rel(1.5)))+ggtitle("D.")
+    pdf(file="Covs_coregion.pdf")
     library(gridExtra)
-    grid.arrange(arrangeGrob(Pt.plot,Grid.plot,nrow=2))
+    grid.arrange(arrangeGrob(Grid.plot1,Grid.plot2,Grid.plot3,Cov.plot,nrow=2))
     dev.off()
   }
 
@@ -76,6 +98,7 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
     for(i in 2:n.covs)col.names=c(col.names,paste("cov",i,sep=''))
   }
   colnames(Covs)=col.names
+  Covs=as.data.frame(Covs)
   
   
   Grid.topo=GridTopology(c(0,0),c(1,1),c(x.len,x.len))
@@ -86,18 +109,17 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
                          "+datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0")
   proj4string(Grid.SpPDF)=CRS(laea_180_proj)   
   
-  Beta=c(rnorm(1,2.5,0.5),rnorm(2*n.covs+gamma(n.covs),0,0.8))
-  
-  #if(DEBUG){
-  #  Covs=data.frame(cov1=Covs$cov1)
-  #  Beta=c(3,4,-1)
-  #}
-  X=model.matrix(~poly(as.matrix(Covs),degree=2,raw=TRUE))
-  
-  
-  Lambda=exp(X%*%Beta+rnorm(S,0,sqrt(1/tau.epsilon)))
-  
-  N=rpois(S,Lambda)
+  N.sum=100000
+  while(N.sum>99999){
+    Beta=c(rnorm(1,2.5,0.5),rnorm(n.covs,0,0.4),rnorm(n.covs,0,0.2),rnorm(choose(n.covs,2),0,0.2))
+    X=model.matrix(~poly(as.matrix(Covs),degree=2,raw=TRUE))
+    Lambda=exp(X%*%Beta+rnorm(S,0,sqrt(1/tau.epsilon)))
+    lam.20=sum(Lambda[which(rank(Lambda)>880)])
+    if(is.na(sum(Lambda))==FALSE & max(Lambda)<100000 & lam.20/sum(Lambda)<0.9){
+      N=rpois(S,Lambda)
+      N.sum=sum(N)
+    }
+  }
   
   Data=Grid.SpPDF
   Data@data=data.frame(Easting=rep(1:sqrt(S),sqrt(S)),Northing=rep(1:sqrt(S),each=sqrt(S)),Lambda=Lambda,N=N)

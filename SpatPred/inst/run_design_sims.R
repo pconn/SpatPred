@@ -2,24 +2,24 @@
 # script to run generic spatio-temporal count data simulations
 source("./SpatPred/R/sim_data_abundance.R")
 source("./SpatPred/R/util_funcs.R")
+source("./SpatPred/R/spat_pred.R")
 
 set.seed(123456)
-n.sims=1#number of simulations at each design point
+n.sims=250 #number of simulations at each design point
 S=900
 prop.sampled=0.1
 n.transects=60
 
-i.sim=TRUE
+i.sim=FALSE
 if(i.sim){
   for(isim in 1:n.sims){
     #simulate covariates, abundance
-    Grid=sim_data_generic(S=S,n.covs=4,tau.epsilon=10)
+    Grid=sim_data_generic(S=S,n.covs=3,tau.epsilon=10)
     Grid$cov1.quad=Grid$cov1^2
     Grid$cov2.quad=Grid$cov2^2
     Grid$cov3.quad=Grid$cov3^2
     Grid$cov12=Grid$cov1*Grid$cov2
     Grid$cov13=Grid$cov1*Grid$cov3
-    Grid$cov23=Grid$cov2*Grid$cov3
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
     save(Grid,file=Cur.file)
   }
@@ -27,42 +27,42 @@ if(i.sim){
   for(isim in 1:n.sims){
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
     load(Cur.file)
-    Effort=sim_effort(Data=Grid,S=S,my.formula=NULL,type="balanced",prop.sampled=prop.sampled,n.points=50)
+    Effort=sim_effort(Data=Grid,S=S,my.formula=NULL,type="balanced",prop.sampled=prop.sampled,n.points=40)
     Cur.file=paste("./Sim_data/Effort_sys",isim,".Rda",sep='')
     save(Effort,file=Cur.file)
     Effort=sim_effort(Data=Grid,S=S,my.formula=NULL,type="clustered",prop.sampled=prop.sampled,n.points=60)    
     Cur.file=paste("./Sim_data/Effort_clust",isim,".Rda",sep='')
     save(Effort,file=Cur.file)
-    my.formula=~cov1+cov1.quad
-    Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
-    Cur.file=paste("./Sim_data/Effort_IVH1",isim,".Rda",sep='')
-    save(Effort,file=Cur.file)
-    my.formula=~(cov1+cov2)^2+cov1.quad+cov2.quad
-    Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
-    Cur.file=paste("./Sim_data/Effort_IVH2",isim,".Rda",sep='')
-    my.formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
-    save(Effort,file=Cur.file)
-    Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
-    Cur.file=paste("./Sim_data/Effort_IVH3",isim,".Rda",sep='') 
-    save(Effort,file=Cur.file)
+    #my.formula=~cov1+cov1.quad
+    #Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
+    #Cur.file=paste("./Sim_data/Effort_IVH1",isim,".Rda",sep='')
+    #save(Effort,file=Cur.file)
+    #my.formula=~(cov1+cov2)^2+cov1.quad+cov2.quad
+    #Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
+    #Cur.file=paste("./Sim_data/Effort_IVH2",isim,".Rda",sep='')
+    #my.formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
+    #save(Effort,file=Cur.file)
+    #Effort=sim_effort(Data=Grid,S=S,my.formula=my.formula,type="IVH",prop.sampled=prop.sampled,n.points=50)    
+    #Cur.file=paste("./Sim_data/Effort_IVH3",isim,".Rda",sep='') 
+    #save(Effort,file=Cur.file)
   }
 }
 
-
-
-
-#s
-
-
 #call estimation routines
-Adj=square_adj(sqrt(S))
+Adj=rect_adj(sqrt(S),sqrt(S))
 for(igen in 1:1){  #loop over generating model to generate data sets
   for(isim in 1:n.sims){  
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
     load(Cur.file) #load abundance,covariate grid
     
-    Cur.file=paste("./Sim_data/Effort_random",isim,".Rda",sep='')
-    load(Cur.file) #load Effort 
+    if(igen==1){
+      Cur.file=paste("./Sim_data/Effort_sys",isim,".Rda",sep='')
+      load(Cur.file) #load Effort 
+    }
+    if(igen==2){
+      Cur.file=paste("./Sim_data/Effort_clust",isim,".Rda",sep='')
+      load(Cur.file) #load Effort 
+    }    
     
     n.transects=length(Effort$Mapping)
 
@@ -70,21 +70,23 @@ for(igen in 1:1){  #loop over generating model to generate data sets
     Area.adjust=rep(1,S)   
     
     #estimation model 1: GLM
-    formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
-    #formula=~cov1+cov1.quad
+    #formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
+    formula=~(cov1+cov2)^2+cov1.quad+cov2.quad
     spatmod=0
     Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
     MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
-    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
-    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)    
+    Control=list(iter=25000,burnin=5000,thin=20,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
+    MCMC.GLM=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)    
     
-    Grid.list=vector("list",1)
-    Grid.list[[1]]=Grid
-    plot_N_map(1,matrix(Grid@data$N,S,1),Grid=Grid.list,leg.title="True Abundance")
-    plot_N_map(1,matrix(Grid@data$cov1,S,1),Grid=Grid.list,leg.title="True Abundance")
-    plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=Effort$Mapping)
-    plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance")
-    plot_N_map(1,matrix(MCMC$Eta,S,1),Grid=Grid.list,leg.title="Abundance")
+    #Grid.list=vector("list",1)
+    #Grid.list[[1]]=Grid
+    ##plot_N_map(1,matrix(Grid@data$N,S,1),Grid=Grid.list,leg.title="True Abundance")
+    #plot_N_map(1,matrix(Grid@data$cov1,S,1),Grid=Grid.list,leg.title="True Abundance")
+    ##plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'mean'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=Effort$Mapping)
+    #plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance")
+    #plot_N_map(1,matrix(MCMC$Eta,S,1),Grid=Grid.list,leg.title="Abundance")
+    #Var=apply(MCMC$MCMC$Pred,1,'var')
+    #plot_N_map(1,matrix(Var,S,1),Grid=Grid.list,leg.title="Pred variance")
     
     
     #estimation model 2: GAM
@@ -107,29 +109,28 @@ for(igen in 1:1){  #loop over generating model to generate data sets
     }
     Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE,Kern.gam.sd=Kern.gam.sd)
     MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL,Names.gam=Names.gam,Knots.gam=Knots.gam)
-    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.sd=Kern.gam.sd)
-    MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL,Names.gam=Names.gam,Knots.gam=Knots.gam)
+    Control=list(iter=25000,burnin=5000,thin=20,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE,Kern.gam.sd=Kern.gam.sd)
+    MCMC.GAM=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL,Names.gam=Names.gam,Knots.gam=Knots.gam)
 
     
-    par(mfrow=c(3,2))
-    for(ipar in 1:6){
-      #x=c(0:100)/100*Knots.gam[[ipar]][4]
-      cur.col=(ipar-1)*4+1
-      K.tmp=MCMC$K.gam[,cur.col:(cur.col+N.knots[ipar]-1)]
-      Cur.alpha=apply(MCMC$MCMC$Alpha[cur.col:(cur.col+N.knots[ipar]-1),],1,'median')
-      plot(Grid@data[,Names.gam[ipar]],K.tmp%*%Cur.alpha,main=paste(Names.gam[ipar]))
-    }
+    #par(mfrow=c(3,2))
+    #for(ipar in 1:6){
+    #  #x=c(0:100)/100*Knots.gam[[ipar]][4]
+    #  cur.col=(ipar-1)*4+1
+    ##  K.tmp=MCMC$K.gam[,cur.col:(cur.col+N.knots[ipar]-1)]
+    #  Cur.alpha=apply(MCMC$MCMC$Alpha[cur.col:(cur.col+N.knots[ipar]-1),],1,'median')
+    #  plot(Grid@data[,Names.gam[ipar]],K.tmp%*%Cur.alpha,main=paste(Names.gam[ipar]))
+    #}
     
     
     #estimation model 3: RSR
     spat.mod=2
-    formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
+    formula=~(cov1+cov2)^2+cov1.quad+cov2.quad
     #formula=~1
     Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE)
     MCMC=spat_pred(formula=formula,spat.mod=spat.mod,Assoc=Adj,Data=Grid,Effort=Effort,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
-    Control=list(iter=11000,burnin=1000,thin=10,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE)
-    MCMC=spat_pred(formula=formula,spat.mod=spat.mod,Assoc=Adj,Data=Grid,Effort=Effort,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
-    
+    Control=list(iter=25000,burnin=5000,thin=20,srr.tol=0.5,predict=TRUE,MH.nu=MCMC$Control$MH.nu,adapt=FALSE,fix.tau.epsilon=FALSE)
+    MCMC.RSR=spat_pred(formula=formula,spat.mod=spat.mod,Assoc=Adj,Data=Grid,Effort=Effort,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
  
         #save results of MCMC run as .Rdata
         
@@ -140,11 +141,11 @@ for(igen in 1:1){  #loop over generating model to generate data sets
         #for(i in 1:nrow(Obs.data))Cov[i]=Data$Grid[[Obs.data[i,"Time"]]]@data[Obs.data[i,"Cell"],"matern"]
         
         #calculate posterior for N
-        MCMC$MCMC$N=apply(MCMC$MCMC$Pred,c(2,3),'sum')
-        N.true=apply(Sim.data$N,2,'sum')
-        N.est=apply(MCMC$MCMC$N,1,'mean')
-        plot(N.est)
-        lines(N.true)
+        #MCMC$MCMC$N=apply(MCMC$MCMC$Pred,c(2,3),'sum')
+        #N.true=apply(Sim.data$N,2,'sum')
+        ##N.est=apply(MCMC$MCMC$N,1,'mean')
+        #plot(N.est)
+        #lines(N.true)
         
         #plot(apply(MCMC$MCMC$Pred,3,'sum')/30)
 
@@ -156,12 +157,12 @@ for(igen in 1:1){  #loop over generating model to generate data sets
         #plot_N_map(20,Sim.data$N,Grid=Data$Grid,leg.title="True Abundance")
         #plot_N_map(30,apply(MCMC$MCMC$Pred,c(1,2),'mean'),Grid=Data$Grid,leg.title="Abundance")
         
-        
-        
-      }
-    }  
+    MCMC=list(RSR=MCMC.RSR,GLM=MCMC.GLM,GAM=MCMC.GAM)
+    fname=paste("./Sim_data/MCMC_gen",igen,"_sim",isim,".Rda",sep='')
+    save(MCMC,file=fname)
   }
 }
 
-  
-  
+
+
+

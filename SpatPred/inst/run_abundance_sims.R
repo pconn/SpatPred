@@ -2,6 +2,7 @@
 # script to run generic spatio-temporal count data simulations
 source("./SpatPred/R/sim_data_abundance.R")
 source("./SpatPred/R/util_funcs.R")
+source("./SpatPred/R/spat_pred.R")
 
 set.seed(123456)
 n.sims=1#number of simulations at each design point
@@ -21,7 +22,7 @@ if(i.sim){
   for(isim in 1:n.sims){
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
     load(Cur.file)
-    Effort=sim_effort(Data=Grid,S=S,formula=NULL,type="random",prop.sampled=prop.sampled,n.points=n.transects)
+    Effort=sim_effort(Data=Grid,S=S,type="random",prop.sampled=prop.sampled,n.points=n.transects)
     Cur.file=paste("./Sim_data/Effort_random",isim,".Rda",sep='')
     save(Effort,file=Cur.file)
   }
@@ -34,7 +35,7 @@ if(i.sim){
 
 
 #call estimation routines
-Adj=square_adj(sqrt(S))
+Adj=rect_adj(sqrt(S),sqrt(S))
 for(igen in 1:1){  #loop over generating model to generate data sets
   for(isim in 1:n.sims){  
     Cur.file=paste("./Sim_data/Cov_abundance",isim,".Rda",sep='')
@@ -55,7 +56,7 @@ for(igen in 1:1){  #loop over generating model to generate data sets
     
     #estimation model 1: GLM
     formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
-    #formula=~cov1+cov1.quad
+    #formula=~cov1+cov2+cov3
     spatmod=0
     Control=list(iter=1000,burnin=500,thin=100,srr.tol=0.5,predict=TRUE,MH.nu=rep(0.2,n.transects),adapt=TRUE,fix.tau.epsilon=FALSE,Kern.gam.se=NULL)
     MCMC=spat_pred(formula=formula,Data=Grid,Effort=Effort,spat.mod=0,Offset=Offset,Area.adjust=Area.adjust,Control=Control,Prior.pars=NULL)
@@ -65,7 +66,7 @@ for(igen in 1:1){  #loop over generating model to generate data sets
     Grid.list=vector("list",1)
     Grid.list[[1]]=Grid
     plot_N_map(1,matrix(Grid@data$N,S,1),Grid=Grid.list,leg.title="True Abundance")
-    plot_N_map(1,matrix(Grid@data$cov1,S,1),Grid=Grid.list,leg.title="True Abundance")
+    plot_N_map(1,matrix(Grid@data$cov3,S,1),Grid=Grid.list,leg.title="True Abundance")
     plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance",highlight=Effort$Mapping)
     plot_N_map(1,matrix(apply(MCMC$MCMC$Pred,1,'median'),S,1),Grid=Grid.list,leg.title="Abundance")
     plot_N_map(1,matrix(MCMC$Eta,S,1),Grid=Grid.list,leg.title="Abundance")

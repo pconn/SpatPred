@@ -118,15 +118,15 @@ d_biv_normal<-function(Tmp.vec,XY,Sigma){
 #' @param highlight If provided, this vector specifies which cells to separately highlight during plotting
 #' @param cell.width if highlight is provided, cell.width must provide the width of a composite grid cell
 #' @param leg.title Title for legend of plot (if different from the default "Abundance")
+#' @param hcolor If highight provided, gives color for highlighting (default = "yellow")
 #' @return An abundance map
 #' @export 
 #' @keywords abundance map, plot
 #' @author Paul Conn \email{paul.conn@@noaa.gov}
-plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundance"){
+plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundance",hcolor='yellow',cur.max=NULL){
   library(sp)
   library(RColorBrewer)
-  myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
-  
+  myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))  
   Tmp=Grid[[1]]
   if(is.null(highlight)==FALSE){
     midpoints=data.frame(gCentroid(Tmp[highlight,],byid=TRUE))
@@ -138,10 +138,11 @@ plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundan
   new.colnames[1:2]=c("Easting","Northing")
   colnames(Cur.df)=new.colnames
   tmp.theme=theme(axis.ticks = element_blank(), axis.text = element_blank())
-  p1=ggplot(Cur.df)+aes(Easting,Northing,fill=Abundance)+geom_raster()+tmp.theme+scale_fill_gradientn(colours=myPalette(100))
+  if(is.null(cur.max))p1=ggplot(Cur.df)+aes(Easting,Northing,fill=Abundance)+geom_raster()+tmp.theme+scale_fill_gradientn(colours=myPalette(100),name=leg.title)
+  else p1=ggplot(Cur.df)+aes(Easting,Northing,fill=Abundance)+geom_raster()+tmp.theme+scale_fill_gradientn(colours=myPalette(100),name=leg.title,limits=c(0,cur.max))
   if(is.null(highlight)==FALSE){
     #p1=p1+geom_rect(data=midpoints,size=0.5,fill=NA,colour="yellow",aes(xmin=Easting-25067,xmax=Easting,ymin=Northing,ymax=Northing+25067))
-    p1=p1+geom_rect(data=midpoints,size=0.5,fill=NA,colour="yellow",aes(xmin=Easting-1/2,xmax=Easting+1/2,ymin=Northing-1/2,ymax=Northing+1/2))
+    p1=p1+geom_rect(data=midpoints,size=0.5,fill=NA,colour=hcolor,aes(xmin=Easting-0.5*cell.width,xmax=Easting+0.5*cell.width,ymin=Northing-0.5*cell.width,ymax=Northing+0.5*cell.width))
   }
   p1
 }

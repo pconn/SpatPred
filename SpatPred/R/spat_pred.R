@@ -102,7 +102,7 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
     Alpha=rep(0,n.alpha)
     cross.K.gam=crossprod(K.gam[Mapping,])
     Alpha.mc=matrix(0,n.alpha,mcmc.length)
-    KpKinv.gam=solve(cross.K.gam)
+    #KpKinv.gam=solve(cross.K.gam)
   }
   Gamma=rep(0,S)  #combined smooth effects by site
   
@@ -137,6 +137,7 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
     Theta=rep(0,n.knots)
     KpKinv=solve(cross.K) # add a little noise to make matrix non-singular
     KpKinvKp=XpXinv%*%t(X.obs)
+    n.theta=n.knots
   }
   
   if(spat.mod==2){ #define some matrices, etc. needed for spatial updates under srr model
@@ -167,6 +168,8 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
     Theta=rnorm(n.theta,0,sqrt(1/tau.eta))
   }
   
+  if(spat.mod>0)Theta.mc=matrix(0,n.theta,mcmc.length)
+     
   if(is.null(Names.gam)==FALSE & n.beta==1){
     Beta[1]=0
     n.beta=0
@@ -254,7 +257,10 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
         Tau.alpha.mc[(iiter-Control$burnin)/Control$thin]=tau.alpha
         Alpha.mc[,(iiter-Control$burnin)/Control$thin]=Alpha
       }
-      if(spat.mod>=1)Tau.eta.mc[(iiter-Control$burnin)/Control$thin]=tau.eta
+      if(spat.mod>0){
+        Tau.eta.mc[(iiter-Control$burnin)/Control$thin]=tau.eta
+        Theta.mc[,(iiter-Control$burnin)/Control$thin]=as.numeric(Theta)
+      }
       if(Control$predict==TRUE){ #make predictions
         #simulate nu if not an ICAR model
         if(spat.mod<2)Nu[Which.not.sampled]=rnorm(n.no,X.no%*%Beta+Gamma[Which.not.sampled]+Eta[Which.not.sampled],sqrt(1/tau.epsilon))
@@ -263,6 +269,11 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
       }
     }
   } 
+  Beta.var=t(cov(t(Beta.mc)))
+  Mu.var=X.pred%*%tcrossprod(Beta.var,X.pred)
+  Mu.mat=Pred.mc
+  for(i in 1:mcmc.length)Mu.mat[,i]=X.pred%*%Beta.mc[,i]
+  
   Out=list(MCMC=list(Beta=Beta.mc,tau.epsilon=Tau.epsilon.mc,Pred=Pred.mc),Accept=Accept,Control=Control)
   if(spat.mod>=1){
     Out$MCMC$tau.eta=Tau.eta.mc
@@ -274,17 +285,35 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
     Out$K.sp=K
     Out$Sigma.alpha=array(0,dim=c(dim(cross.K),length(Tau.epsilon.mc)))
     for(i in 1:length(Tau.epsilon.mc))Out$Sigma.alpha[,,i]=solve(cross.K*Tau.epsilon.mc[i] + diag(Tau.eta.mc[i],nrow=n.knots))                    
+    Mu.var=Mu.var+K%*%tcrossprod(t(cov(t(Theta.mc))),K)
+    for(i in 1:mcmc.length)Mu.mat[,i]=Mu.mat[,i]+K%*%Theta.mc[,i]
   }
   if(spat.mod==2){
     Out$K.sp=L.t
     Out$Sigma.alpha=array(0,dim=c(dim(cross.L),length(Tau.epsilon.mc)))
     for(i in 1:length(Tau.epsilon.mc))Out$Sigma.alpha[,,i]=as.matrix(solve(cross.L*Tau.epsilon.mc[i]+Tau.eta.mc[i]*Qt))
+    Mu.var=Mu.var+L.t%*%t(cov(t(Theta.mc)))%*%L
+    for(i in 1:mcmc.length)Mu.mat[,i]=Mu.mat[,i]+L.t%*%Theta.mc[,i]
   }
   if(is.null(Names.gam)==FALSE){
     Out$MCMC$tau.alpha=Tau.alpha.mc
     Out$MCMC$Alpha=Alpha.mc
     Out$K.gam=K.gam
+    Mu.var=Mu.var+K.gam%*%tcrossprod(t(cov(t(Alpha.mc))),K.gam)
+    for(i in 1:mcmc.length)Mu.mat[,i]=Mu.mat[,i]+K.gam%*%Alpha.mc[,i]
   }
+  Mu=apply(Mu.mat,1,'median')
+  Lambda.var=(exp(Mu))^2*diag(Mu.var)
+  max.obs=max(Lambda.var[Mapping])
+  gIVH=rep(1,S)
+  which.gt.max=which(Lambda.var>max.obs)
+  if(length(which.gt.max)>0)gIVH[which.gt.max]=0
+  max.obs=max(diag(Mu.var)[Mapping])
+  gIVH2=rep(1,S)
+  which.gt.max=which(diag(Mu.var)>max.obs)
+  if(length(which.gt.max)>0)gIVH2[which.gt.max]=0  
+  Out$gIVH=gIVH
+  Out$gIVH2=gIVH2
   Out
 }
 

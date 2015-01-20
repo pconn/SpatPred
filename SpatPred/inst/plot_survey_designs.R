@@ -3,7 +3,7 @@
 S=900
 XY=expand.grid(y=c(sqrt(S):1),x=c(1:sqrt(S)))
 ids.reg=factor(c(1:50))
-ids.clust=factor(c(1:60))
+ids.clust=factor(c(1:50))
 ids.IVH=ids.reg
 isim=1
 
@@ -18,12 +18,20 @@ Cur.file=paste("./Sim_data/Effort_clust",isim,".Rda",sep='')
 load(Cur.file) #load Effort
 Effort.clust=Effort
 
-Cur.file=paste("./Sim_data/Effort_IVH1",isim,".Rda",sep='')
-load(Cur.file) #load Effort
-Effort.IVH=Effort
+
 
 
 Data=Grid
+
+#calculate knot-cell distances for process convolution 
+Knot.locations=expand.grid(x=c(1:6)*7-9,y=c(1:6)*7-9)
+n.knots=nrow(Knot.locations)
+#calculate kernel densities at grid cell centroids 
+Distances=matrix(0,S,n.knots)
+for(iS in 1:S)Distances[iS,]=sqrt((Knot.locations[,1]-XY[iS,"x"])^2+(Knot.locations[,2]-XY[iS,"y"])^2)
+K=matrix(dnorm(Distances,0,7),S,n.knots)  #knot sd=5 
+K=K/rowSums(K)        
+
 
 #compute gIVH for different designs
 
@@ -63,7 +71,7 @@ dev.off()
 
 #my.formula=~(cov1+cov2+cov3)^2+cov1.quad+cov2.quad+cov3.quad
 my.formula=~1
-gIVH.cluster=gIVH(Data=Data,Effort=Effort.clust,Assoc=Assoc,my.formula=my.formula,Tau.beta=c(0.1,2),Tau.eta=c(0.1,10),Tau.epsilon=c(99,100),srr.tol=0.8)
+gIVH.cluster=gIVH(Data=Data,Effort=Effort.clust,Assoc=NULL,K=K,my.formula=my.formula,Tau.beta=c(0.1,2),Tau.eta=c(0.1,10),Tau.epsilon=c(99,100),srr.tol=0.8)
 df<-data.frame(id=ids.clust,Easting=XY[Effort.clust$Mapping,"x"],Northing=XY[Effort.clust$Mapping,"y"])
 Abund=log(gIVH.cluster$Var.pred)
 #Abund=gIVH.cluster$IVH
