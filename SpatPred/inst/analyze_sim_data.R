@@ -1,9 +1,7 @@
 ### ANALYZE SIMULATION DATA FOR SPATIAL PREDICTION PAPER
-
+### note: this has some hardwiring for local directory structures
 S=900
 n.sims=1000
-#Vars=matrix(0,S,3)
-#colnames(Vars)=c("GLM","GAM","RSR")
 Bias=matrix(0,n.sims,24)
 colnames(Bias)=c("GLM.sys.all","GAM.sys.all","RSR.sys.all","RSR2.sys.all",
                  "GLM.sys.gIVH","GAM.sys.gIVH","RSR.sys.gIVH","RSR2.sys.gIVH",
@@ -26,17 +24,7 @@ for(igen in 1:2){
     else cur.file=paste("./Sim_data/Effort_clust",isim,".Rda",sep='')
     load(cur.file)
         
-    #calculate posterior prediction variance on count scale
-    #Vars[,"GLM"]=apply(MCMC$GLM$MCMC$Pred,1,"var")
-    #Vars[,"GAM"]=apply(MCMC$GAM$MCMC$Pred,1,"var")
-    #Vars[,"RSR"]=apply(MCMC$RSR$MCMC$Pred,1,"var")
-    #Vars[,"RSR"]=apply(MCMC$RSR$MCMC$Pred,1,"var")
-    
-    
-    #determine gIVH membership
-    #IVH.glm=which(Vars[,"GLM"]<=max(Vars[Effort$Mapping,"GLM"]))
-    #IVH.gam=which(Vars[,"GAM"]<=max(Vars[Effort$Mapping,"GAM"]))
-    #IVH.rsr=which(Vars[,"RSR"]<=max(Vars[Effort$Mapping,"RSR"])) 
+     #determine gIVH membership
     IVH.glm=which(MCMC$GLM$gIVH==1)  #gIVH on real scale
     IVH.gam=which(MCMC$GAM$gIVH==1)
     IVH.rsr=which(MCMC$RSR$gIVH==1)   #2 covariates
@@ -135,8 +123,6 @@ bias.plot = ggplot(Bias.df,aes(factor(Model),Bias))+geom_boxplot()+facet_grid(gI
 bias.plot=bias.plot + theme(text=element_text(size=20))
 bias.plot=bias.plot + theme(axis.text.y=element_text(size=14))
 bias.plot=bias.plot + coord_cartesian(ylim=c(-1.2,2))
-#bias.plot=bias.plot + geom_point(data=DF.trunc.1,aes(x=Est.mod,y=Bias),shape=2)
-#bias.plot=bias.plot + geom_point(data=DF.trunc.5,aes(x=Est.mod,y=Bias),shape=2)
 bias.plot=bias.plot + labs(x = "Estimation model", y="Proportion relative bias")
 
 

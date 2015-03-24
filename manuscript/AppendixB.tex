@@ -67,7 +67,7 @@ Appendix B: Full details of simulation study examining predictive extrapolation
 
 \doublespacing
 
-Spatially explicit statistical models are increasingly used to estimate animal abundance and predict species distributions from count data.  We employed a simulation study to examine the ability of the generalized independent variable hull (gIVH) to diagnose potential areas across the landscape where predictions of animal abundance using these models may be problematic, and to determine whether statistical inferences are more robust when restricted to sampling units within the gIVH.  Each simulation replicate consisted of several steps, including
+Spatially explicit statistical models are increasingly used to estimate animal abundance and predict species distributions from count data.  We employed a simulation study to examine the ability of the generalized independent variable hull (gIVH) to diagnose potential areas across the landscape where predictions of animal abundance using these models may be problematic, and to determine whether statistical inferences are more robust when restricted to sampling units within the gIVH.  Each simulation replicate consisted of several steps (Fig. \ref{}), including
 \begin{enumerate}
   \item Simulate three hypothetical, statistically dependent, spatially autocorrelated environmental covariates over a 30 by 30 grid,
   \item Simulate animal abundance across the landscape as a function of environmental covariates,
@@ -75,7 +75,7 @@ Spatially explicit statistical models are increasingly used to estimate animal a
   \item Estimate animal abundance as a function of two of the environmental covariates according three different models: a generalized linear model (GLM), a generalized additive model (GAM), and a spatio-temporal regression model (STRM).  For the latter, only a spatial dimension was modeled.  All such models were specified hierarchically, with MCMC used for posterior simulation.
   \item Calculate the gIVH using realized posterior variance (i.e. after data were collected and analyzed).
 \end{enumerate}
-We now describe each of these tasks and results of the simulation study in further detail.  All analyses were performed in the R programming environment \citep{RTeam2012}; requisite code to recreate analyses is available in the R package \texttt{SpatPred} that accompanies this article.
+We now describe each of these tasks and results of the simulation study in further detail before describing results.  All analyses were performed in the R programming environment \citep{RTeam2012}; requisite code to recreate analyses is available in the R package \texttt{SpatPred} that accompanies this article.
 
 \underline{1. Simulating environmental covariates} \\
 In the real world, different habitat covariates are often correlated with each other (e.g., altitude and precipitation), and are often patchily distributed across the landscape (i.e., are spatially autocorrelated).  We thus desired a procedure for generating covariates that would allow some level of statistical dependence among covariates, together with spatial autocorrelation.  For each simulation, we generated three spatially autocorrelated environmental covariates using a procedure motivated by linear coregionalization models in multivariate spatial statistics \citep[e.g.][]{GoulardVoltz1992} to impart desired behavior.   To start, we used the R package \texttt{RandomFields} to simulate 10 realizations ${\bf y}_i$ ($i \in 1,2,\hdots,10$) of independent, mean-zero random fields over a $30 \times 30$ grid (where the lower case bold type denotes a vector).  Each random field had a stationary, isotropic, exponential covariance structure, where the covariance $C$ between two survey units (i.e. grid cells) was a function of the distance $r$ between grid cell centroids, $C(r)=\exp(r/v)$. Note that the distance between horizontally and vertically adjacent grid cell centroids was standardized to 1.0; the scale parameter $v$ of the exponential covariance function for each random field was drawn from a Uniform(5,100) distribution to induce heterogeneity in the spatial scale of each process.
@@ -91,7 +91,7 @@ Evidently, the covariance between each induced habitat covariate is a function o
   \item Set all $\omega_{ij}=0$
   \item For each desired covariate, $j$, randomly sample four values ${\bf u}_j$ from the set $\{ 1,2,\hdots,10\}$ without replacement.
   \item For each value $u \in {\bf u}_j$, set $\omega_{uj} \sim \mathcal{N}(0,1)$.
-\end{enumerate} 
+\end{enumerate}
 This procedure led to ``patchy" habitat covariates with realistic levels of covariation (Fig. \ref{fig:covs}).  To prevent redundancy and collinearity, we rejected and resampled covariate values (using the same procedure) whenever maximum absolute correlation among covariates was greater than 0.75.
 
 
@@ -128,12 +128,27 @@ For each set of count data, we attempted to estimate animal abundance over the l
 
 \underline{5. Calculating the gIVH} \\
 
+As suggested in Appendix A, we used Eq. A.7 to calculate the gIVH, substituting in samples from the joint posterior distribution of each model for $\boldsymbol{\theta}$.
+
+\centerline{\sc Results}
+
+Posterior predictions from simulations indicated that the distribution for proportional error in total abundance was right skewed when statistical inference was made with regard to the entire survey area (Fig. \ref{fig:sim_boxplots}).  This was particularly true for GLM and STRM models, and was exacerbated when convenience sampling was employed.  The magnitude of mean absolute bias was reduced when inference was constrained to the gIVH for all 6 configurations of survey design and estimation model.  Interestingly, the convolution kernel GAMs we employed often underestimated total abundance, perhaps because of dampening ``edge effects" at extreme ranges of observed covariates, or possibly because interactions among covariates were not modeled.  For GLMs and STRMs, positive proportional bias was the rule, and was of concerning magnitude (e.g. $\approx 0.3$; Fig. \ref{fig:sim_boxplots}) for GLMs and STRMs when convenience sampling was employed and inference was not restricted to the gIVH.
+
+
 \renewcommand{\refname}{Literature Cited}
 \bibliographystyle{ecology}
 
 \bibliography{master_bib}
 
 \end{flushleft}
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[width=6in]{sim_maps.pdf}
+\end{center}
+\caption{Depiction of a single simulation scenario.  Panels (A-C) give simulated covariate values, panel D gives true animal abundance, (E) gives estimated abundance from a GLM run on count data from a spatially balanced survey design, and (F) gives abundance from a GLM applied to count data from a convenience survey.  In (E-F), predictions outside the gIVH are represented by black boxes, and sampling locations are represented with an x.  For the convenience sample, the median posterior abundance prediction for the entire survey area is $57\%$ greater than true abundance when inference is made to the whole study area.  When inference is limited to the gIVH, median posterior abundance was just $16\%$ greater than true abundance.}
+\label{fig:sim_maps}
+\end{figure}
 
 \begin{figure}[!h]
 \begin{center}
@@ -144,6 +159,14 @@ For each set of count data, we attempted to estimate animal abundance over the l
 \end{figure}
 
 
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[width=6in]{bias_generic.pdf}
+\end{center}
+\caption{Boxplots summarizing distribution of proportional error in the posterior predictive median of abundance for the simulation study as a function of estimation model (x-axis), survey design (columns) and whether or not inference was restricted to the gIVH (rows).  The lower and upper limits of each box correspond to first and third quartiles, while whiskers extend to the lowest and highest observed bias within 1.5 interquartile range units from the box.  Outliers outside of this range are denoted with points.  Horizontal lines within boxes denote median bias.  The two numbers located below each boxplot indicate mean bias (upper number) and the number of additional outliers for which proportional bias was greater than 2.0 (lower number). }
+\label{fig:sim_boxplots}
+\end{figure}  
 
 \end{document}
 

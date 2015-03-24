@@ -21,14 +21,14 @@ plot(x0,Y)
 PredVar.df=data.frame(x=x0,pred.var=diag(X0%*%solve(crossprod(X))%*%t(X0)))
 
 library(ggplot2)
-my.theme=theme(plot.title = element_text(hjust = 0),axis.ticks = element_blank(), axis.text.y = element_blank(),axis.title.y=element_blank(),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.text=element_text(size=16),legend.key.height=unit(1.1,"line"))
+my.theme=theme(plot.title = element_text(hjust = 0),axis.ticks = element_blank(), axis.text.y = element_blank(),axis.text.y=element_blank(),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.text=element_text(size=16),legend.key.height=unit(1.1,"line"))
 
 #note the next line is hardwired with values obtained by examining elements of Extrap
 Rect.df=data.frame(x.min=c(0,2.98),x.max=c(1.01,4),y.min=c(0,0),y.max=c(1,1))
 linear.plot=ggplot(Rect.df)+geom_rect(aes(xmin=x.min,xmax=x.max,ymin=y.min,ymax=y.max),fill='gray')
 linear.plot=linear.plot+my.theme+geom_point(data=Point.df,aes(x=x,y=y),size=3,shape=4,colour='black')
 linear.plot=linear.plot+geom_line(data=PredVar.df,aes(x=x,y=pred.var),size=1)
-linear.plot=linear.plot+geom_hline(yintercept=max.IVH,linetype=2)+ggtitle("A.")
+linear.plot=linear.plot+geom_hline(yintercept=max.IVH,linetype=2)+ggtitle("A.")+ylab("Scaled variance")
 linear.plot
 
 
@@ -53,13 +53,13 @@ plot(x0,Y)
 PredVar.df=data.frame(x=x0,pred.var=diag(X0%*%solve(crossprod(X2))%*%t(X0)))
 
 library(ggplot2)
-my.theme=theme(plot.title = element_text(hjust = 0),axis.ticks = element_blank(), axis.text.y = element_blank(),axis.title.y=element_blank(),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.text=element_text(size=16),legend.key.height=unit(1.1,"line"))
+my.theme=theme(plot.title = element_text(hjust = 0),axis.ticks = element_blank(),axis.text.y = element_blank(),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.text=element_text(size=16),legend.key.height=unit(1.1,"line"))
 
 Rect.df=data.frame(x.min=c(0,1.69,2.98),x.max=c(1.01,2.30,4),y.min=c(0,0,0),y.max=c(1,1,1))
 quad.plot=ggplot(Rect.df)+geom_rect(aes(xmin=x.min,xmax=x.max,ymin=y.min,ymax=y.max),fill='gray')
 quad.plot=quad.plot+my.theme+geom_point(data=Point.df,aes(x=x,y=y),size=3,shape=4,colour='black')
 quad.plot=quad.plot+geom_line(data=PredVar.df,aes(x=x,y=pred.var),size=1)
-quad.plot=quad.plot+geom_hline(yintercept=max.IVH,linetype=2)+ylim(0,1)+ggtitle("B.")
+quad.plot=quad.plot+geom_hline(yintercept=max.IVH,linetype=2)+ylim(0,1)+ggtitle("B.")+ylab("Scaled variance")
 
 quad.plot
 
@@ -92,7 +92,7 @@ my.theme=theme(plot.title = element_text(hjust = -.1),strip.text=element_text(fa
 DF=data.frame(x=Xnew[,2],y=Xnew[,3],resp=Extrap)
 DF.data=data.frame(x=x,y=y)
 plot.biv=ggplot()+geom_point(data=DF,aes(x=x,y=y,colour=resp))+scale_colour_grey(start = 0.87, end = 0.64)
-plot.biv=plot.biv+geom_point(data=DF.data,aes(x=x,y=y),size=3,shape=4)+my.theme+ggtitle("C.")
+plot.biv=plot.biv+geom_point(data=DF.data,aes(x=x,y=y),size=3,shape=4)+my.theme+ggtitle("C.")+ylab(expression(x[2]))+xlab(expression(x[1]))
 plot.biv
 
 library(gridExtra)
@@ -138,7 +138,7 @@ my.theme=theme(plot.title = element_text(hjust = -.1),strip.text=element_text(fa
 DF=data.frame(x=Xnew[,2],y=Xnew[,3],resp=Extrap)
 DF.data=data.frame(x=x,y=y)
 plot.biv.2=ggplot()+geom_point(data=DF,aes(x=x,y=y,colour=resp))+scale_colour_grey(start = 0.87, end = 0.64)
-plot.biv.2=plot.biv.2+geom_point(data=DF.data,aes(x=x,y=y),size=3,shape=4)+my.theme+ggtitle("D.")
+plot.biv.2=plot.biv.2+geom_point(data=DF.data,aes(x=x,y=y),size=3,shape=4)+my.theme+ggtitle("D.")+ylab(expression(x[2]))+xlab(expression(x[1]))
 plot.biv.2
 
 library(gridExtra)

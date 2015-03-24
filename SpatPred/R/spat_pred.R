@@ -3,7 +3,7 @@
 #' @param Data   A SpatialPolygonsDataFrame holding covariate values for all cells one wants to make predictions on (including sampled cells)
 #' @param Effort A list including "Counts" which gives the response variable for surveyed cells, and "Mapping" which is a vector indicating which sample unit is associated with which count
 #' @param Area.adjust   A vector allowing for differences in suitable habitat for each cell.  Can be used for different grid cell sizes or different
-#'        proportions of suitable habitat (e.g., 1.0 = 100% of habitat is suitable for the focal species)
+#'        proportions of suitable habitat (e.g., 1.0 = 100 percent of habitat is suitable for the focal species)
 #' @param Offset	A vector giving the fraction of each grid cell in Mapping that was surveyed
 #' @param spat.mod Controls whether (and what type) of spatial autocorrelation is implemented (spatmod = 0: no spatial autocorrelation; spatmod=1: process convolution; spatmod=2: srr ICAR) 
 #'        Note that if spatmod=1, the argument Knots needs to be specified; if spatmod=2, Adj must be specified
@@ -31,15 +31,14 @@
 #' 	MCMC: A list object containing posterior samples;
 #'  Accept: A list object indicating the number of proposals that were accepted for parameters updated via Metropolis-Hastings;
 #'  Control: A list object giving MCMC tuning parameters (which are updated if the 'adapt' alorithm is used)
+#'  gIVH: A binary vector, with length equal to the number of survey units, describing whether predictions for each survey unit are (=1) or are not (=0) within the gIVH
+#'  K.gam: A ``design matrix" associated with smooth effects, should the GAM procedure be employed
 #' @export
 #' @import Matrix
 #' @keywords areal model, data augmentation, mcmc, spatial prediction
 #' @author Paul B. Conn \email{paul.conn@@noaa.gov} 
 #' @examples print("Later!")
 spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,Assoc=NULL,K=NULL,Names.gam=NULL,Knots.gam=NULL,Prior.pars=NULL,Precision.pars=NULL){
-  require(Matrix)
-  require(mvtnorm)
-  require(rgeos)
   #do a little checking
   if(spat.mod==1 & is.null(K)==TRUE)cat('ERROR: Knots Spatial Points Object (see sp library) must be supplied for spatmod=1')  
   if(spat.mod==2 & is.null(Assoc)==TRUE)cat('ERROR: Association matrix must be supplied for spatmod=2')
@@ -309,11 +308,7 @@ spat_pred<-function(formula,Data,Effort,spat.mod=0,Offset,Area.adjust,Control,As
   which.gt.max=which(Lambda.var>max.obs)
   if(length(which.gt.max)>0)gIVH[which.gt.max]=0
   max.obs=max(diag(Mu.var)[Mapping])
-  gIVH2=rep(1,S)
-  which.gt.max=which(diag(Mu.var)>max.obs)
-  if(length(which.gt.max)>0)gIVH2[which.gt.max]=0  
   Out$gIVH=gIVH
-  Out$gIVH2=gIVH2
   Out
 }
 

@@ -1,4 +1,4 @@
-#' function to simulate spatial count data over a simulated landscape
+#' function to simulate abundance over a simulated landscape
 #' @param S Number of cells (must be a square number)
 #' @param n.covs Number of habitat covariates (default 4)
 #' @param tau.epsilon Precision of exchangeable errors in log space
@@ -7,19 +7,13 @@
 #' @keywords spatio-temporal, simulation
 #' @author Paul B. Conn
 sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
-  require(ggplot2)
-  require(Matrix)
-  require(spatstat)
-  require(sp)
-  require(RandomFields)
-  
   DEBUG=FALSE   
   PLOT=FALSE
   if(PLOT)set.seed(11111)
   tau.epsilon=100
   #if(DEBUG)tau.epsilon=100
   
-  source('./SpatPred/R/util_funcs.R')
+  #source('./SpatPred/R/util_funcs.R')
    
   if(sqrt(S)%%1>0)cat("error in sim_data_generic; S must be a square number \n")
   
@@ -54,22 +48,13 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
     Grid2=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Covs[,2]))
     Grid3=data.frame(y=rep(1:30,each=30),x=rep(c(1:30),30),cov=as.vector(Covs[,3]))
     Grid=rbind(Grid1,Grid2,Grid3)
-    #Covariate=c(rep(1,S),rep(2,S),rep(3,S))
-    #Grid=cbind(Grid,Covariate)
-    library(ggplot2)
-    library(RColorBrewer)
     myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))
-    #Grid.plot=ggplot()+geom_raster(data=Grid,aes(x=x,y=y,fill=cov))+
-    #  theme(axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+
-    #  ggtitle("A.")+scale_fill_gradientn(colours=myPalette(100))+facet_wrap(~Covariate)   
-    Grid.plot1=ggplot()+geom_raster(data=Grid1,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("A.")+scale_fill_gradientn(colours=myPalette(100))
+     Grid.plot1=ggplot()+geom_raster(data=Grid1,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("A.")+scale_fill_gradientn(colours=myPalette(100))
     Grid.plot2=ggplot()+geom_raster(data=Grid2,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("B.")+scale_fill_gradientn(colours=myPalette(100))
     Grid.plot3=ggplot()+geom_raster(data=Grid3,aes(x=x,y=y,fill=cov))+theme(title=element_text(size=rel(1.5)),axis.text=element_blank(),axis.title=element_blank(),plot.title = element_text(hjust = 0))+ggtitle("C.")+scale_fill_gradientn(colours=myPalette(100))    
     #now, iterate to produce a histogram of implied correlation coefficients
     Cor=rep(0,1000)
     for(irep in 1:1000){
-      #Omega=matrix(0,n.basis,S)
-      #Cov=matrix(0,n.covs,S)
       my.mod=RMexp(var=1,scale=100)
       for(i in 1:n.basis){
         my.mod=RMexp(var=1,scale=runif(1,5,100))
@@ -136,8 +121,17 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
 }
 
 
-
-sim_effort<-function(Data,S,my.formula=NULL,type="random",prop.sampled=0.1,n.points=round(0.1*S)){
+#' function to simulate spatial count data over a simulated grid, conditional on expected abundance
+#' @param Data A SpatialPolygonsDataFrame for a square survey grid including a data column "N" that gives total abundance in each survey unit
+#' @param S Number of cells (must be a square number)
+#' @param type Type of spatial survey.  Choices are "random" (default), "clustered," or "balanced"
+#' @param prop.sampled A numeric value giving the proportion of each survey unit that is actually sampled (default 0.1)
+#' @param n.points Number of survey units that are sampled.  The default is to round (0.1*S)
+#' @return A data.frame with two columns, "Mapping" - indicating which survey units are sampled, and "Counts" - giving no. of animals counted
+#' @export
+#' @keywords spatio-temporal, simulation
+#' @author Paul B. Conn
+sim_effort<-function(Data,S,type="random",prop.sampled=0.1,n.points=round(0.1*S)){
   x.len=sqrt(S)
   if(type=="clustered"){
     center=sqrt(S)/2
@@ -158,12 +152,10 @@ sim_effort<-function(Data,S,my.formula=NULL,type="random",prop.sampled=0.1,n.poi
     #plot1    
   }
   if(type=="balanced"){
-    require(spsurvey)
     design<-list("Stratum1"=list(panel=c(Panel=n.points),seltype="Equal",over=0))
     att.frame=data.frame(x=rep(c(1:sqrt(S)),each=sqrt(S)),y=rep(c(1:(sqrt(S))),sqrt(S)))
     spsurv<-grts(design=design,src.frame="att.frame",att.frame=att.frame,shapefile=FALSE)
     
-    #x.base=rep(spsurv$x,2)
     x.base=spsurv$x
     y.base=spsurv$y #c(spsurv$y*2-1,spsurv$y*2)
     ids=factor(c(1:n.points))
@@ -182,66 +174,8 @@ sim_effort<-function(Data,S,my.formula=NULL,type="random",prop.sampled=0.1,n.poi
     Mapping=rep(0,n.points)
     for(itrans in 1:n.points){
       Mapping[itrans]=(x.base[itrans]-1)*sqrt(S)+sqrt(S)-y.base[itrans]+1
-    }
-    #Area.trans=rep(0.25,n.transects*2)    
-    
-    
-    
-  }
-  if(type=="IVH"){
-    X=model.matrix(my.formula,data=Data@data)
-    Wt=diag(X%*%solve(crossprod(X),t(X)))
-    Mapping=sample(c(1:S),n.points,prob=Wt^2) 
-    
-    #XY=expand.grid(x=c(1:sqrt(S)),y=c(1:sqrt(S)))
-    #ids=factor(c(1:n.points))
-    #df<-data.frame(id=ids,x=XY[Mapping,"x"],y=XY[Mapping,"y"])
-    #Abund=Wt*1000
-    #Abund.df=data.frame(x=XY[,"x"],y=XY[,"y"],Abundance=round(as.vector(Abund)))
-    #require(ggplot2)
-    #plot1<-ggplot(Abund.df,aes(x,y,fill=Abundance))+geom_tile()+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0))+scale_fill_gradient(low="white",high="black")+xlab("")+ylab("")
-    #plot1<-plot1+geom_rect(data=df,aes(group=ids,xmin=x-1/2,xmax=x+1/2,ymin=y-.49,ymax=y+.49),fill="maroon")
-    #plot1        
-  }
-  
-  #if(type=="IVH.spat"){
-  #  X=matrix(1,S,1)
-  #  XpXinv=solve(crossprod(X))
-  #  Assoc=rect_adj(sqrt(S),sqrt(S))
-  #  Q=-Assoc
-  #  diag(Q)=apply(Assoc,2,'sum')
-  #  Q=Matrix(Q)  
-  #  L.t=XpXinv
-  #  L=L.t
-  #  Qt=L.t
-  #  cross.L=L.t
-  #  Theta=L.t
-  #  P.c=diag(S)-X%*%solve(crossprod(X),t(X))
-  #  Omega=Matrix((P.c%*%Assoc%*%P.c)*(S/sum(Assoc)))
-  #  Eigen=eigen(Omega)
-  #  if(max(Eigen$values)<0.5)cat(paste("\n Error: maximum eigenvalue (",max(Eigen$values),") < Meta$srr.tol; decrease srr.tol"))
-  #  Ind=which(Eigen$values>0.5)
-  #  L.t=Eigen$vectors[,Ind]
-  #  L=t(L.t)
-  #  Wt=diag(L.t%*%solve(crossprod(L.t),L))
-  #  Mapping=sort(sample(c(1:S),n.points,prob=Wt^2)) 
-      
-    
-  #  Var.obs=L.t%*%solve(crossprod(L.t[Mapping,]),L)
-  #  XY=expand.grid(x=c(1:sqrt(S)),y=c(1:sqrt(S)))
-  #  ids=factor(c(1:n.points))
-  #  df<-data.frame(id=ids,x=XY[Mapping,"x"],y=XY[Mapping,"y"])
-  #  #Abund=Data@data[,"Wt"]*100 
-  #  Abund=Var.obs*1000
-  #  #Abund.df=data.frame(cbind(rep(c(sqrt(S):1),sqrt(S)),rep(c(1:sqrt(S)),each=sqrt(S)),round(as.vector(Abund))))
-  #  Abund.df=data.frame(x=XY[,"x"],y=XY[,"y"],Abundance=round(as.vector(Abund)))
-  #  #colnames(Abund.df)=c("x","y","Abundance")
-  #  require(ggplot2)
-  #  plot1<-ggplot(Abund.df,aes(x,y,fill=Abundance))+geom_tile()+scale_x_continuous(expand=c(0,0))+scale_y_continuous(expand=c(0,0))+scale_fill_gradient(low="white",high="black")+xlab("")+ylab("")
-  #  plot1<-plot1+geom_rect(data=df,aes(group=ids,xmin=x-1/2,xmax=x+1/2,ymin=y-.49,ymax=y+.49),fill="maroon")
-  #  plot1        
-  #}  
-  
+    }    
+  }  
   if(type=="random"){
     Mapping=sort(sample(c(1:S),n.points,replace=FALSE))
   }

@@ -1,84 +1,44 @@
-### calculate prior prediction variance/gIVH via Monte Carlo
-
-gIVH <- function(Data,Effort,spat.mod=1,K=NULL,Assoc=NULL,my.formula,Tau.beta,Tau.eta,Tau.epsilon,srr.tol=0.8){
-  n.reps=1000
-  X.pred=model.matrix(my.formula,data=Data@data)
-  X.obs=model.matrix(my.formula,data=Data@data[Effort$Mapping,]) 
-  n.obs=length(Effort$Mapping)
-  XpXinv=solve(crossprod(X.obs))
-  n.beta=ncol(X.pred)
-  I.beta=diag(nrow(XpXinv))
+#' a generic function to calculate the generalized independent variable hull for spatial models when
+#' model is of form Data ~ f(g^{-1}(mu)), where f is a probability density/mass function, g is a link function, and
+#' mu = X*Beta + K*Theta + Epsilon.  Here, X is a design matrix and Beta give fixed effects,
+#' K is an expansion matrix for spatial (or GAM) random effects, Theta are random effects (if modeled), and Epsilon is normally distributed error
+#' @param X A design matrix for fixed effects (including sampled and unsampled locations)
+#' @param Beta A matrix holding a sample from the joint (prior or posterior) distribution of regression parameters. The number of rows = the number of samples, while the number of columns gives the number of regression coefficients.
+#' @param Sampled An integer-valued vector indicating which cells were actually sampled (these should correspond to rows of X)
+#' @param K An expansion matrix for random effects (if not provided, a diagonal matrix is used)
+#' @param Theta If random effects, a matrix holding a sample from the joint distribution of spatial random random effects (# rows = sample size, # columns = # of random effects).  Default is NULL.
+#' @param link A character string providing the link function.  Options are "log", "logit," or "probit" (default = 'log').
+#' @return A list containing two objects: gIVH- a binary vector indicating which cells are in (=1.0) or are outside (=0.0) the gIVH, and Pred.var- a vector housing expected prediction variance.  Note that Pred.var is on the real scale, but does not incorporate stochasticity from the distribution f().
+#' @export
+#' @keywords spatio-temporal, simulation
+#' @author Paul B. Conn
+gIVH <- function(X,Beta,Sampled,K=NULL,Theta=NULL,link="log"){
+  S=nrow(X)
+  if(is.matrix(Beta)==FALSE)Beta=matrix(Beta,nrow=length(Beta))
+  mcmc.length=nrow(Beta)
+  X.pred=X
+  X.obs=X[Sampled,]
+  if(is.null(K) & !is.null(Theta))K=diag(ncol(Theta))
   
-  if(spat.mod==1 & is.null(K)==TRUE)cat("ERROR: User must provide K if spat.mod=1")
+  Beta.var=cov(Beta)
+  Mu.var=X.pred%*%tcrossprod(Beta.var,X.pred)
+  Mu.mat=matrix(0,S,mcmc.length)
+  for(i in 1:mcmc.length)Mu.mat[,i]=X.pred%*%Beta[i,]
   
-  if(spat.mod==1){ #define some matrices, etc. needed for PC model
-    n.knots=ncol(K)
-    K.t=t(K)
-    cross.K=crossprod(K)
-    Theta=rep(0,n.knots)
-    KpKinv=solve(cross.K) # add a little noise to make matrix non-singular
-    KpKinvKp=XpXinv%*%t(X.obs)
+  if(!is.null(Theta)){
+    Mu.var=Mu.var+K%*%tcrossprod(cov(Theta),K)
+    for(i in 1:mcmc.length)Mu.mat[,i]=Mu.mat[,i]+K%*%Theta[i,]
   }
   
-  if(spat.mod==2){
-    Q=-Assoc
-    diag(Q)=apply(Assoc,2,'sum')
-    Q=Matrix(Q)  
-    L.t=XpXinv
-    L=L.t
-    Qt=L.t
-    cross.L=L.t
-    Theta=L.t
-    P.c=diag(S)-X.pred%*%solve(crossprod(X.pred),t(X.pred))
-    Omega=Matrix((P.c%*%Assoc%*%P.c)*(S/sum(Assoc)))
-    Eigen=eigen(Omega)
-    if(srr.tol>1){ #in this case, the number of eigenvalues is preselected
-      L.t=Eigen$vectors[,1:srr.tol]      
-    }
-    else{ #in this case, compute the number of eigenvalues > the threshold
-      if(max(Eigen$values)<srr.tol)cat(paste("\n Error: maximum eigenvalue (",max(Eigen$values),") < Meta$srr.tol; decrease srr.tol"))
-      Ind=which(Eigen$values>srr.tol)
-      L.t=Eigen$vectors[,Ind]
-      cat(paste("\n",length(Ind)," eigenvectors selected for spatially restricted regression \n"))
-    }
-    L=t(L.t)
-    Qt=L%*%Q%*%L.t
-    #Qt=L[,Effort$Mapping]%*%Q[Effort$Mapping,Effort$Mapping]%*%L.t[Effort$Mapping,]  #NOTE: limiting rows of K to those locations observed here
-    cross.L=L%*%L.t
-    n.theta=nrow(Qt)
-    I.eta=diag(nrow(Qt))
-  }
-  
-  Lambda.mc=matrix(0,S,n.reps)
-  Var.lambda=matrix(0,S,n.reps)
-  #Var.obs=matrix(0,n.obs,n.reps)
-  X.aug=X.pred
-  if(spat.mod==1)X.aug=cbind(X.aug,K)
-  if(spat.mod==2)X.aug=cbind(X.aug,L.t)
-  
-  for(irep in 1:n.reps){
-    tau.beta<-runif(1,Tau.beta[1],Tau.beta[2])
-    Beta<-matrix(rmvnorm(1,rep(0,n.beta),1/tau.beta*XpXinv),n.beta,1)
-    
-   #Beta<-tcrossprod(backsolve(chol(tau.beta*XpXinv),I.beta))
-    tau.eta<-runif(1,Tau.eta[1],Tau.eta[2])
-    Theta=0
-    if(spat.mod==1)Theta<-matrix(rmvnorm(1,rep(0,n.theta),1/tau.eta*as.matrix(Qt)),n.theta,1) 
-    if(spat.mod==2)Theta<-matrix(rmvnorm(1,rep(0,n.theta),1/tau.eta*as.matrix(Qt)),n.theta,1)     
-
-    #Lambda.mc[,irep]=exp(X.pred%*%Beta+L.t%*%Theta+rnorm(S,0,1/sqrt(runif(1,Tau.epsilon[1],Tau.epsilon[2]))))
-    Lambda=exp(X.pred%*%Beta+L.t%*%Theta+rnorm(S,0,1/sqrt(runif(1,Tau.epsilon[1],Tau.epsilon[2]))))
-    Lambda.mc[,irep]=Lambda
-    Delta=diag(as.vector(Lambda))
-    Var.aug=bdiag(1/tau.beta*XpXinv,1/tau.eta*as.matrix(Qt))
-    Var.lambda[,irep]=diag(Delta%*%(X.aug%*%Var.aug%*%t(X.aug))%*%t(Delta))
-  }
-  IVH=rep(1,S)
-  #Out=list(Var.pred=apply(Lambda.mc,1,'var'))
-  Out=list(Var.pred=rowMeans(Var.lambda))
-  max.var=max(Out$Var.pred[Effort$Mapping])
-  Gt.max=which(Out$Var.pred>max.var)
-  if(length(Gt.max)>0)IVH[Gt.max]=0
-  Out$IVH=IVH
+  Mu=apply(Mu.mat,1,'median')
+  small=0.00000001
+  if(link=="log")Lambda.var=(exp(Mu))^2*diag(Mu.var)
+  if(link=="logit")Lambda.var=(exp(Mu)/(1+exp(Mu))^2)^2*diag(Mu.var)
+  if(link=="probit")Lambda.var=((pnorm(Mu+small)-pnorm(Mu))/small)^2*diag(Mu.var)
+  max.obs=max(Lambda.var[Sampled])
+  gIVH=rep(1,S)
+  which.gt.max=which(Lambda.var>max.obs)
+  if(length(which.gt.max)>0)gIVH[which.gt.max]=0
+  Out=list(gIVH=gIVH,Pred.var=Lambda.var)
   Out
 }

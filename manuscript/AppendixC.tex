@@ -1,0 +1,110 @@
+\documentclass[12pt,fleqn]{article}
+%\documentclass[12pt,a4paper]{article}
+\usepackage{natbib}
+\usepackage{lineno}
+%\usepackage{lscape}
+%\usepackage{rotating}
+%\usepackage{rotcapt, rotate}
+\usepackage{amsmath,epsfig,epsf,psfrag}
+\usepackage{setspace}
+\usepackage{ulem}
+\usepackage{xcolor}
+\usepackage[labelfont=bf,labelsep=period]{caption} %for making figure and table numbers bold
+\usepackage[colorlinks,bookmarksopen,bookmarksnumbered,citecolor=red,urlcolor=red]{hyperref}
+\hypersetup{pdfpagemode=UseNone}
+
+%\usepackage{a4wide,amsmath,epsfig,epsf,psfrag}
+
+
+\def\be{{\ensuremath\mathbf{e}}}
+\def\bx{{\ensuremath\mathbf{x}}}
+\def\bX{{\ensuremath\mathbf{X}}}
+\def\bthet{{\ensuremath\boldsymbol{\theta}}}
+\newcommand{\VS}{V\&S}
+\newcommand{\tr}{\mbox{tr}}
+%\renewcommand{\refname}{\hspace{2.3in} \normalfont \normalsize LITERATURE CITED}
+%this tells it to put 'Literature Cited' instead of 'References'
+\bibpunct{(}{)}{,}{a}{}{;}
+\oddsidemargin 0.0in
+\evensidemargin 0.0in
+\textwidth 6.5in
+\headheight 0.0in
+\topmargin 0.0in
+\textheight=9.0in
+%\renewcommand{\tablename}{\textbf{Table}}
+%\renewcommand{\figurename}{\textbf{Figure}}
+\renewcommand{\em}{\it}
+\renewcommand\thefigure{C\arabic{figure}}
+\renewcommand\thetable{C\arabic{table}}
+\renewcommand\theequation{C.\arabic{equation}}
+
+\begin{document}
+
+\begin{center} \bf {\large On extrapolating past the range of observed data when making statistical predictions in ecology}
+
+\vspace{0.7cm}
+Paul B. Conn$^{1*}$, Devin S. Johnson$^1$, and Peter L. Boveng$^1$
+\end{center}
+\vspace{0.5cm}
+
+\rm
+\small
+
+\it $^1$National Marine Mammal Laboratory, Alaska Fisheries Science Center,
+NOAA National Marine Fisheries Service,
+Seattle, Washington 98115 U.S.A.\\
+
+\rm \begin{flushleft}
+
+\raggedbottom
+\vspace{.5in}
+
+\begin{center}
+Appendix C: Additional details on ribbon seal count data and analyses
+\bigskip
+\end{center}
+\vspace{.3in}
+
+\doublespacing
+
+
+As part of an international effort, researchers with the U.S. National Marine Fisheries Service conducted aerial surveys over the eastern Bering Sea in 2012 and 2013.  Agency scientists used infrared video to detect seals that were on ice, and collected simultaneous digital photographs to provide information on species identity. For this study, we use spatially referenced count data from photographed ribbon seals, {\it Phoca fasciata} on a subset of 10 flights flown over the Bering Sea from April 20-27, 2012.  We limited flights to a one week period because sea ice melts rapidly in the Bering Sea in the spring, and modeling counts over a longer duration would likely require addressing how sea ice and seal abundance changes over both time and space \citep[see][]{ConnEtAl2015}. However, limiting analysis to a one week period makes the assumption of static sea ice and seal densities tenable \citep{ConnEtAl2014}.
+
+\hspace{.5in} Our objective with this dataset will be to model seal counts on transects through 25km by 25km grid cells as a function of habitat covariates and possible spatial autocorrelation. Estimates of apparent abundance can then be obtained by summing predictions across grid cells. Figure \ref{fig:covs} show explanatory covariates gathered to help predict ribbon seal abundance.  These data are described in fuller detail by \citet{ConnEtAl2014}, who extend the modeling framework of STRMs to account for incomplete detection and species misidentification errors.  Since our focus in this paper is on illustrating spatial modeling concepts, we devote our efforts to the comparably easier problem of estimating apparent abundance (i.e., uncorrected for vagaries of the detection process).
+
+
+\hspace{0.5in} We fit GLMs, an STRMs, and GAMs to the ribbon seal data.  The fixed effects component of the GLM and STRM included linear effects of all explanatory covariates (Fig. \ref{fig:covs}, as well as a quadratic effect for sea ice concentration.  For the STRM, we imposed a restricted spatial regression (RSR) formulation for spatially autocorrelated random effects, where dimension reduction was accomplished by only selecting eigenvectors of the spectral decomposition associated with eigenvalues that were greater than 0.5 (see Appendix A for additional information on model structure).  For the GAM, we employed smooth terms with 8 knots for each covariate.  This included 4 knots at the minimum, 1/3 and 2/3 quantiles, and the maximum observed covariate values, in addition to 4 knots above and below the range of observed data to reduce the magnitude of known biased endpoint behavior that can occur with radial basis function implementations of GAMs.
+
+As with simulated data examples, we adopted a Bayesian perspective and conducted estimation using MCMC (see Appendix A for algorithm details and information on prior distributions) with 60,000 iterations where the first 10,000 iterations were discarded as a burn-in.  We generated posterior predictions of ribbon seal abundance across the landscape as
+\begin{equation}
+  N_i \sim {\rm Poisson}(A_i \lambda_i),
+\end{equation}
+and calculated the gIVH as in Eqn. \ref{eq:gIVH}, with delta method modifications as specified in Eqns. \ref{eq:var-mu}-\ref{eq:E_var_lambda}.
+
+
+\renewcommand{\refname}{Literature Cited}
+\bibliographystyle{ecology}
+
+\bibliography{master_bib}
+
+\end{flushleft}
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[width=6in]{covariates_col.pdf}
+\end{center}
+\caption{Assembled covariates used to help explain and predict ribbon seal relative abundance in the eastern Bering Sea.  Covariates include distance from mainland (\texttt{dist\_mainland}), distance from 1000m depth contour (\texttt{dist\_shelf}), average remotely sensed sea ice concentration while surveys were being conducted (\texttt{ice\_conc}), and distance from the southern sea ice edge (\texttt{dist\_edge}).  All covariates except ice concentration were standardized to have a mean of 1.0 prior to plotting and analysis.
+}
+\label{fig:covs}
+\end{figure}
+
+
+
+
+
+\end{document}
+
+
+
+
+

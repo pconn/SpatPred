@@ -60,7 +60,7 @@ Seattle, Washington 98115 U.S.A.\\
 \vspace{.5in}
 
 \begin{center}
-Appendix A: Model formulation and Gibbs sampling algorithms for certain classes and extensions of the generalized linear model
+Appendix A: Model formulation, Gibbs sampling algorithms, and gIVH calculations for certain classes and extensions of the generalized linear model
 \bigskip
 \end{center}
 \vspace{.3in}
@@ -100,7 +100,7 @@ a vector of linear predictor values (one for each data point being analyzed), $\
 Although one can allow nonlinear relationships between response variables and regressors by including polynomial terms in the design matrix of a GLM, these need to be pre-selected by the analyst and it is often unclear how many such terms one should include. Generalized additive models \citep[GAMs;][]{HastieTibshirani1999,Wood2006} build upon generalized linear models, but instead allow smooth relationships between the dependent and independent variables using flexible functions such as splines.  Such models have
 been employed in a number of spatial prediction scenarios, including transect sampling models for animal abundance \citep{HedleyBuckland2004} and SDMs \citep{GuisanEtAl2002}.  For instance, animal density or presence can be modeled as a smooth, unknown function of a habitat covariate.
 
-\hspace{.5in}There are a number of ways smooth relationships can be modeled; in order to formulate a GAM in the notation of Eq. \ref{eq:basic_model} we employ a knot-based kernel smoother with a Gaussian radial basis function.  The basic notion is to place $k_j$ knots, which we will denote by $\boldsymbol{\omega}_j = \{ \omega_{1j},\omega_{2j},\hdots,\omega_{k_j j} \}$, throughout the range of a given regressor $j$, where the number of knots controls the level of smoothing.  For each regressor of interest, we can then calculate a matrix ${\bf K}_j$ of dimension $(n,k_j)$, with entries $\mathcal{N}(X_{ij};\omega_j,\tau_{\omega,j})$, where $\mathcal{N}(x;\mu,\tau)$ denotes a Gaussian distribution with mean $\mu$ and precision $\tau$.  We can then introduce additional regression coefficients $\boldsymbol{\alpha}_j$ to help model the smooth relationship, and incorporate these into the linear predictor.  In the case of one smooth term, we then have  in Eq. \ref{eq:basic_model}:
+\hspace{.5in}There are a number of ways smooth relationships can be modeled; in order to formulate a GAM in the notation of Eq. \ref{eq:basic_model} we employ a knot-based kernel smoother with a Gaussian radial basis function.  The basic notion is to place $k_j$ knots, which we will denote by $\boldsymbol{\omega}_j = \{ \omega_{1j},\omega_{2j},\hdots,\omega_{k_j j} \}$, throughout the range of a given regressor $j$, where the number of knots controls the level of smoothing.  For each regressor of interest, we can then calculate a matrix ${\bf K}_j$ of dimension $(n,k_j)$ (where $n$ gives the number of observed data locations), with entries $z_{ik}=\mathcal{N}(X_{ij};\omega_{kj},\tau_j)$, where $\mathcal{N}(x;\mu,\tau)$ denotes a Gaussian distribution with mean $\mu$ and precision $\tau$, $i$ indexes a particular observed data location, and $k$ denotes the $k$th knot for covariate $j$, $k \in \{1,2,\hdots,k_j \}$. We can then introduce additional regression coefficients $\boldsymbol{\alpha}_j$ to help model the smooth relationship, and incorporate these into the linear predictor.  In the case of one smooth term, we then have  in Eq. \ref{eq:basic_model}:
 \begin{linenomath*}
 \begin{equation}
   \label{eq:GAM}
@@ -121,36 +121,24 @@ extrapolation bias.  We note that similar formulations for GAMs (e.g. using thin
 The previous two modeling frameworks (GLMs and GAMs) do not acknowledge spatial autocorrelation above and beyond that induced
 by modeled covariates.  However, it is common for residuals from GLM and GAM model fits to include spatial autocorrelation, which violates their common assumption of independently distributed error \citep{Legendre1993,LichsteinEtAl2002}.  Parameter estimates from GLMs and GAMs that display residual autocorrelation should be interpreted with caution, as they will tend to have overstated precision and may even be biased.  In such situations, analysts often employ spatial regression models which explicitly account for spatial autocorrelation above and beyond that explained by modeled covariates.
 
-There are a variety of ways spatial autocorrelation can be included in regression models, depending on (i) the spatial support (i.e., continuous vs. discrete), and (ii) the particular mechanism used to impart correlation.  Here, we shall focus on areal models for discrete spatial support, as our impression is that these are more commonly employed in ecological studies.  Such models require that data are aggregated at the level of some sample unit (plots, grid cells, etc.).  Spatio-temporal regression models (STRMs) for areal data are often specified in a similar fashion to GLMs and GAMs:
+\hspace{.5in}There are a variety of ways spatial autocorrelation can be included in regression models, depending on (i) the spatial support (i.e., continuous vs. discrete), and (ii) the particular mechanism used to impart correlation.  Here, we shall focus on areal models for discrete spatial support, as our impression is that these are more commonly employed in ecological studies.  Such models require that data are aggregated at the level of some sample unit (plots, grid cells, etc.).  Spatio-temporal regression models (STRMs) for areal data are often specified in a similar fashion to GLMs and GAMs:
 \begin{linenomath*}
 \begin{equation}
   \label{eq:spat_reg}
   \boldsymbol{\xi}={\bf X} \boldsymbol{\beta} + \boldsymbol{\eta},
 \end{equation}
 \end{linenomath*}
-where $\boldsymbol{\eta}$ represent spatially autocorrelated effects.  In this treatment we shall consider two approaches for
-inducing spatial autocorrelation in $\boldsymbol{\eta}$: process convolution
-\citep[PC;][]{Higdon1998} and restricted spatial regression \citep[RSR;][]{Reich2006,Hodges2010,Hughes2013}.
+where $\boldsymbol{\eta}$ represent spatially autocorrelated effects.  In this treatment we shall limit consideration one approach for
+inducing spatial autocorrelation in $\boldsymbol{\eta}$: restricted spatial regression \citep[RSR;][]{Reich2006,Hodges2010,Hughes2013}.
 
-The PC implementation works by placing $k$ knots throughout the spatial domain being analyzed, and like our GAM formulation, uses distances from the center point of each sample unit to each of these knot locations to induce spatial structure.  Using similar notation to our GAM formulation, we denote these knots as $\boldsymbol{\omega} = \{ \boldsymbol{\omega_{1}},\boldsymbol{\omega}_{2},\hdots,\boldsymbol{\omega}_{k} \}$; the $\boldsymbol{\omega}_m$ are bivariate in this  instance as space is assumed to be two dimensional.  We then construct a matrix ${\bf K}$ of dimension $(n,k)$ with entries $\mathcal{BVN}({\bf s}_i;\boldsymbol{\omega}_m,\tau_{\omega})$, where $\mathcal{BVN}({\bf x};{\bf \mu},\tau)$ denotes a bivariate Gaussian distribution with mean $\boldsymbol{\mu}$ and precision $\tau$.  As with our GAM model we introduce additional regression coefficients $\boldsymbol{\alpha}$ to estimate the level of spatial smoothing conditional on the assumed knot structure and reparameterize the STRM as
-\begin{linenomath*}
-\begin{equation}
-  \label{eq:PC}
-  \boldsymbol{\xi}={\bf X} \boldsymbol{\beta} + {\bf K} \boldsymbol{\alpha}
-\end{equation}
-\end{linenomath*}
-This model is structurally very similar to the GAM model (indeed it may be interpreted as a GAM with a bivariate smooth on spatial location).  Similarly, we can rearrange terms to write it similar to the GLM, such that
-$\boldsymbol{\xi}={\bf X}_{aug} \boldsymbol{\beta}_{aug}$,
-where in this case ${\bf X}_{aug} = \left[ {\bf X} \hspace{3mm} {\bf K} \right]$, and $\boldsymbol{\beta}_{aug}=\left[  \boldsymbol{\beta} \hspace{3mm} \boldsymbol{\alpha} \right] ^\prime$.
-
-The RSR approach to spatial regression uses a reduced-rank version of the popular intrinsic conditionally autoregressive \citep[ICAR;][]{Besag1995,Rue2005} model for spatial random effects, reparameterized so that basis vectors are orthogonal to the main effects of interest.  This approach has generated substantial recent interest, as fixed effects retain primacy in explaining variation in the ecological process of interest and problems with spatial confounding between fixed and random effects are eliminated. As such, spatial random effects are only used to account for residual autocorrelation \citep{Reich2006,Hodges2010} and the decision to incorporate spatial autocorrelation has little effect on the point estimates of fixed effects.  In addition, reduced dimension spatial models such as RSR lighten computational burden while still accounting for course-scale spatial autocorrelation \citep[see e.g.][]{LatimerEtAl2009,Wikle2010,Hughes2013}.  It turns out that RSR models can also be written in the form of Eq. \ref{eq:PC}, using a
+\hspace{.5in}The RSR approach to spatial regression uses a reduced-rank version of the popular intrinsic conditionally autoregressive \citep[ICAR;][]{Besag1995,RueHeld2005} model for spatial random effects, reparameterized so that basis vectors are orthogonal to the main effects of interest.  This approach has generated substantial recent interest, as fixed effects retain primacy in explaining variation in the ecological process of interest and problems with spatial confounding between fixed and random effects are eliminated. As such, spatial random effects are only used to account for residual autocorrelation \citep{Reich2006,Hodges2010} and the decision to incorporate spatial autocorrelation has little effect on the point estimates of fixed effects.  In addition, reduced dimension spatial models such as RSR lighten computational burden while still accounting for course-scale spatial autocorrelation \citep[see e.g.][]{LatimerEtAl2009,Wikle2010,Hughes2013}.  It turns out that RSR models can also be written in the form of Eq. \ref{eq:PC}, using a
 different choice of ${\bf K}$ \citep{Hughes2013}, constructed as follows:
 \begin{enumerate}
   \item Define the residual projection matrix ${\bf P}^\perp={\bf I}-{\bf X}({\bf X}^\prime{\bf X})^{-1}{\bf X}^\prime$
-  \item Calculate the Moran operator matrix $\boldsymbol{\Omega}=J{\bf P}^\perp \mathcal{W}{\bf P}^\perp/{\bf 1}^\prime \mathcal{W} {\bf 1}$
+  \item Calculate the Moran operator matrix $\boldsymbol{\Omega}=J{\bf P}^\perp {\bf W}{\bf P}^\perp/{\bf 1}^\prime {\bf W} {\bf 1}$, where $J$ is the number of areal survey units
   \item Define ${\bf K}$ as an $(n \times m)$ matrix, where the columns of ${\bf K}$ are composed of the eigenvectors  associated with the largest $m$ eigenvalues of $\boldsymbol{\Omega}$. Hughes and Haran (\citeyear{Hughes2013}) used simulation to explore a range of such values and concluded $m=50-100$ should suffice for most applications.
 \end{enumerate}
-Here, ${\bf I}$ an identity matrix, ${\bf 1}$ is a column vector of ones, and $\mathcal{W}$ represents an association matrix describing the spatial neighborhood structure of sampling units.  For instance, for a first order neighborhood structure, $\mathcal{W}$ would include a 1 for all rows $i$ and columns $j$ where sampling unit $i$ and $j$ are neighbors \citep[see][for alternative association matrices]{Rue2005}.
+Here, ${\bf I}$ an identity matrix, ${\bf 1}$ is a column vector of ones, and ${\bf W}$ represents an association matrix describing the spatial neighborhood structure of sampling units.  For instance, for a first order neighborhood structure, ${\bf W}$ would include a 1 for all rows $i$ and columns $j$ where sampling unit $i$ and $j$ are neighbors \citep[see][for alternative association matrices]{RueHeld2005}.
 
 \section{Gibbs sampling}
 
@@ -162,7 +150,7 @@ Our Gibbs sampler for the GLM model consists of three sets of parameter updates 
 
 \underline{Sampling from $[\boldsymbol{\beta}|\cdot]$}
 
-Setting the prior for the suite of regression parameters as $[\boldsymbol{\beta}] = \textrm{MVN}({\bf 0},(\tau_\beta X^\prime X)^{-1})$ results in the full conditional distribution
+Setting the prior for the suite of regression parameters as $[\boldsymbol{\beta}] = \mathcal{MVN}({\bf 0},(\tau_\beta X^\prime X)^{-1})$ results in the full conditional distribution
 \begin{linenomath*}
 \begin{equation*}
    [\boldsymbol{\beta} | \cdot] \equiv \mathcal{N}(({\bf X}^\prime {\bf X})^{-1}{\bf X}^\prime \boldsymbol{\mu},({\bf X}^\prime {\bf X})^{-1} (\tau_\epsilon + \tau_\beta)^{-1}).
@@ -215,9 +203,10 @@ We impose a Gaussian prior on smoothing kernel weights, $\boldsymbol{\alpha} \si
 \end{linenomath*}
 We set $\tau_\alpha = 0.01$ in all subsequent applications.
 
-\subsection{Gibbs sampler for the PC STRM model}
 
-The Gibbs sampler for the process convolution version of the STRM model consists of the following:
+\subsection{Gibbs sampler for the STRM model}
+
+The Gibbs sampler for the RSR version of the STRM model consists of the following:
 
 \underline{Sampling from $[\boldsymbol{\beta}|\cdot]$}
 
@@ -242,20 +231,7 @@ The full conditional is the same as for the GAM model with the replacement $\Del
 
 \underline{Sampling from $[\boldsymbol{\alpha}|\cdot]$}
 
-We impose the same Gaussian prior on smoothing kernel weights, $\boldsymbol{\alpha} \sim \mathcal{N}(0,\tau_\alpha^{-1})$ as for the GAM.  The resulting full conditional is simply
-\begin{linenomath*}
-\begin{equation*}
-   [\boldsymbol{\alpha} | \cdot] \equiv \mathcal{MVN}(({\bf K}^\prime {\bf K})^{-1}{\bf K}^\prime (\boldsymbol{\mu}-{\bf X}\boldsymbol{\beta}),({\bf K}^\prime {\bf K}^{-1} (\tau_\epsilon + \tau_\alpha)^{-1}).
-\end{equation*}
-\end{linenomath*}
-
-\subsection{Gibbs sampler for the RSR STRM model}
-
-Although ${\bf K}$ is defined differently in the RSR model, the Gibbs sampler remains the same as for the the PC model, with the exception of a modified full conditional for $[\boldsymbol{\alpha}|\cdot]$ owing to a different prior specification for $\boldsymbol{\alpha}$.  We must also update an additional precision parameter associated with spatial random effects, $\tau_\eta$.
-
-\underline{Sampling from $[\boldsymbol{\alpha}|\cdot]$}
-
-In the RSR model, the implied prior for reduced dimension spatial effects is $\boldsymbol{\alpha} \sim \text{MVN}(0,\tau_\eta^{-1}{\bf K}^\prime {\bf Q} {\bf K})$.  The resulting full conditional is
+In the RSR model, the implied prior for reduced dimension spatial effects is $\boldsymbol{\alpha} \sim \mathcal{MVN}(0,\tau_\eta^{-1}{\bf K}^\prime {\bf Q} {\bf K})$.  The resulting full conditional is
 \begin{linenomath*}
 \begin{eqnarray*}
    [\boldsymbol{\alpha} | \cdot] & = & \mathcal{MVN}({\bf M},\boldsymbol{\Sigma}), \text{ where} \\
@@ -284,6 +260,36 @@ If all we wanted to do was to estimate regression coefficients, the previous sam
 \item Sample ${\bf N}^{(t)} \sim \text{Poisson}(\boldsymbol{\mu}^{(t)})$, where ${\bf N}^{(t)}$ is a vector of posterior predictions across the landscape.
 \item Compute a posterior prediction for total abundance as $N^{(t)}=\sum_s N_s^{(t)}$.
 \end{enumerate}
+
+\subsection{Calculating the gIVH}
+
+
+In order to calculate prediction variance on the real scale for generalized models, it is necessary to use a procedure such as the delta method \citep{Dorfman1938}.  In particular, we can write the variance of the Poisson expectation as
+\begin{linenomath*}
+\begin{eqnarray}
+  \label{eq:var-lambda}
+  {\rm var}(\boldsymbol{\lambda}_x) & = & {\rm var}(g(\boldsymbol{\mu}_x)) \\
+  & \approx & \boldsymbol{\Delta} {\rm var}(\boldsymbol{\mu}_x)\boldsymbol{\Delta}^\prime,
+%  \boldsymbol{\Delta} & = & \left[ \begin{array}{cccc}
+%      \frac{\partial g(\mu_1)}{\partial \mu_1} & \frac{\partial g(\mu_1)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_1)}{\partial \mu_n} \\
+%      \frac{\partial g(\mu_2)}{\partial \mu_1} & \frac{\partial g(\mu_2)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_2)}{\partial \mu_n} \\
+%      \vdots & \vdots & \ddots & \vdots \\
+%      \frac{\partial g(\mu_n)}{\partial \mu_1} & \frac{\partial g(\mu_n)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_n)}{\partial \mu_n} \\
+%  \end{array} \right].
+\end{eqnarray}
+\end{linenomath*}
+where $\boldsymbol{\Delta}$ is a matrix of partial derivatives $\partial g(\mu_r)/\partial \mu_c$ ($r$ and $c$ denoting rows and columns of $\boldsymbol{\Delta}$, respectively).  Under common univariate link functions (e.g. log, logit, probit), $\boldsymbol{\Delta}$ has a diagonal form, while for multivariate links (e.g. multinomial logit) $\boldsymbol{\Delta}$ will be dense.
+
+\hspace{.5in} Unlike Cook's original formulation, the gIVH will often involve unknown parameters.  Further, the exact form of ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ depends on the underlying model structure and estimation procedure.  We impose a probability distribution $[\boldsymbol{\theta}]$ for unknown parameters, and compute prediction variance as
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:E_var_lambda}
+  {\rm var}(\boldsymbol{\lambda}_x | {\bf Y}) = \int_{\boldsymbol{\theta}} {\rm var}(\boldsymbol{\lambda}_x | {\bf Y}, \boldsymbol{\theta}) [\boldsymbol{\theta}] d \boldsymbol{\theta}.
+\end{equation}
+\end{linenomath*}
+
+\hspace{.5in} Our approach in this paper is to conduct a Bayesian analysis (using the Gibbs sampling algorithms outlined above) and substitute the posterior distribution $[\boldsymbol{\theta}|{\bf Y}]$ for $[\boldsymbol{\theta}]$ in Eq. \ref{eq:E_var_lambda}. Under this approach, one simply sets ${\rm Var}(\mu_x)$ equal to the posterior variance of $\mu_x$ (across Markov chain iterations).  In the case of the log link function, one also needs an estimate for $\mu_x$ to use in delta method calculations; we used the posterior median for each sampling unit.  Although we use a Bayesian formulation for modeling convenience, one could also consider substituting parametric approximations for ${\rm Var}(\mu_x)$ and $\mu_x$ based on output from standard likelihood-based analyses.
+
 
 \renewcommand{\refname}{Literature Cited}
 \bibliographystyle{ecology}
