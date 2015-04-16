@@ -64,7 +64,8 @@ new.colnames=colnames(tmp2)
 new.colnames[1:2]=c("Easting","Northing")
 colnames(tmp2)=new.colnames
 tmp.theme=theme(axis.ticks = element_blank(), axis.text = element_blank(),plot.title = element_text(hjust = 0))
-pdf(file="covariates_col.pdf")
+
+tiff(file="covariates_col.tiff",height=8,width=8,units='in',res=300)
 pushViewport(viewport(layout=grid.layout(2,2)))
 p1=ggplot(tmp2)+aes(Easting,Northing,fill=dist_mainland)+geom_raster()+tmp.theme+scale_fill_gradientn(colours=greenPalette(100),name="Value")+ggtitle("A. Distance from mainland")
 print(p1,vp=viewport(layout.pos.row=1,layout.pos.col=1))

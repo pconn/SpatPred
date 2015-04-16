@@ -1,0 +1,292 @@
+\documentclass[12pt,fleqn]{article}
+%\documentclass[12pt,a4paper]{article}
+\usepackage{natbib}
+\usepackage{lineno}
+%\usepackage{lscape}
+%\usepackage{rotating}
+%\usepackage{rotcapt, rotate}
+\usepackage{amsmath,epsfig,epsf,psfrag}
+\usepackage{setspace}
+\usepackage{ulem}
+\usepackage{xcolor}
+\usepackage[labelfont=bf,labelsep=period]{caption} %for making figure and table numbers bold
+\usepackage[colorlinks,bookmarksopen,bookmarksnumbered,citecolor=red,urlcolor=red]{hyperref}
+\hypersetup{pdfpagemode=UseNone}
+
+%\usepackage{a4wide,amsmath,epsfig,epsf,psfrag}
+
+
+\def\be{{\ensuremath\mathbf{e}}}
+\def\bx{{\ensuremath\mathbf{x}}}
+\def\bX{{\ensuremath\mathbf{X}}}
+\def\bthet{{\ensuremath\boldsymbol{\theta}}}
+\newcommand{\VS}{V\&S}
+\newcommand{\tr}{\mbox{tr}}
+%\renewcommand{\refname}{\hspace{2.3in} \normalfont \normalsize LITERATURE CITED}
+%this tells it to put 'Literature Cited' instead of 'References'
+\bibpunct{(}{)}{,}{a}{}{;}
+\oddsidemargin 0.0in
+\evensidemargin 0.0in
+\textwidth 6.5in
+\headheight 0.0in
+\topmargin 0.0in
+\textheight=9.0in
+%\renewcommand{\tablename}{\textbf{Table}}
+%\renewcommand{\figurename}{\textbf{Figure}}
+\renewcommand{\em}{\it}
+\renewcommand\thefigure{S1\arabic{figure}}
+\renewcommand\thetable{S1\arabic{table}}
+\renewcommand\theequation{S1.\arabic{equation}}
+
+\begin{document}
+
+
+\rm \begin{flushleft}
+
+\raggedbottom
+\vspace{.5in}
+
+\begin{center}
+S1 Text: Model formulation, Gibbs sampling algorithms, and gIVH calculations for certain classes and extensions of the generalized linear model
+\bigskip
+\end{center}
+\vspace{.3in}
+
+\doublespacing
+
+
+
+We write all statistical models for ecological prediction in the form
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:basic_model}
+  Y_i \sim f_Y(g^{-1}(\mu_i)),
+\end{equation}
+\end{linenomath*}
+where $\mu_i=\xi_i + \epsilon_i$, $f_Y$ denotes a probability density or mass function (e.g. Bernoulli, Poisson), $g$ gives a link function,
+$\xi_i$ is a linear predictor, and $\epsilon_i \sim {\rm Normal}(0,\tau_\epsilon)$ is iid Gaussian error with precision parameter $\tau_\epsilon$.  The specification in Eq. \ref{eq:basic_model} is thus doubly stochastic, in the sense that we assume error associated with $f_Y$ as well as in the location parameter $\mu_i$.  This setup can be useful computationally, and can also be used to approximate singly stochastic system by setting $\tau_\epsilon$ to a large value.  For instance, models for count data often assume a Poisson error structure with a log link function to ensure that the Poisson intensity parameter is greater than zero.  In this case, we would specify
+\begin{linenomath*}
+\begin{equation*}
+  Y_i \sim \mathrm{Poisson}(\exp(\xi_i + \epsilon_i)),
+\end{equation*}
+\end{linenomath*}
+a configuration known as a log-Gaussian Cox process.
+We now describe how different classes of statistical models can be developed depending on how one structures the linear predictor, $\xi_i$.
+
+\section{Models}
+\subsection{Generalized linear models (GLMs)}
+
+Generalized linear models \citep{McCullaghNelder1989} are one of the simplest (and most often used) statistical models
+used by ecologists to make spatial predictions. In GLMs, the linear predictor is a simple linear function of gathered covariates
+(including possible polynomial terms and interactions).  Statisticians often describe this relationship by
+$\boldsymbol{\xi}={\bf X} \boldsymbol{\beta}$, which is written in matrix notation.  In particular, $\boldsymbol{\xi}$ gives
+a vector of linear predictor values (one for each data point being analyzed), $\boldsymbol{\beta}$ gives a vector of regression coefficients, and ${\bf X}$ is a design matrix which includes all explanatory variables (and often a column vector of ones to represent an intercept).
+
+\subsection{Generalized additive models (GAMs)}
+
+Although one can allow nonlinear relationships between response variables and regressors by including polynomial terms in the design matrix of a GLM, these need to be pre-selected by the analyst and it is often unclear how many such terms one should include. Generalized additive models \citep[GAMs;][]{HastieTibshirani1999,Wood2006} build upon generalized linear models, but instead allow smooth relationships between the dependent and independent variables using flexible functions such as splines.  Such models have
+been employed in a number of spatial prediction scenarios, including transect sampling models for animal abundance \citep{HedleyBuckland2004} and SDMs \citep{GuisanEtAl2002}.  For instance, animal density or presence can be modeled as a smooth, unknown function of a habitat covariate.
+
+\hspace{.5in}There are a number of ways smooth relationships can be modeled; in order to formulate a GAM in the notation of Eq. \ref{eq:basic_model} we employ a knot-based kernel smoother with a Gaussian radial basis function.  The basic notion is to place $k_j$ knots, which we will denote by $\boldsymbol{\omega}_j = \{ \omega_{1j},\omega_{2j},\hdots,\omega_{k_j j} \}$, throughout the range of a given regressor $j$, where the number of knots controls the level of smoothing.  For each regressor of interest, we can then calculate a matrix ${\bf K}_j$ of dimension $(n,k_j)$ (where $n$ gives the number of observed data locations), with entries $z_{ik}=\mathcal{N}(X_{ij};\omega_{kj},\tau_j)$, where $\mathcal{N}(x;\mu,\tau)$ denotes a Gaussian distribution with mean $\mu$ and precision $\tau$, $i$ indexes a particular observed data location, and $k$ denotes the $k$th knot for covariate $j$, $k \in \{1,2,\hdots,k_j \}$. We can then introduce additional regression coefficients $\boldsymbol{\alpha}_j$ to help model the smooth relationship, and incorporate these into the linear predictor.  In the case of one smooth term, we then have  in Eq. \ref{eq:basic_model}:
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:GAM}
+  \boldsymbol{\xi}={\bf X} \boldsymbol{\beta} + {\bf K}_j \boldsymbol{\alpha}_j
+\end{equation}
+\end{linenomath*}
+When fitting such a model, one needs to select the number and location of knots, as well as the precision parameter $\tau_{\omega,j}$ for the Gaussian basis kernels.  This could be done using some notion of optimality or prediction error (as with cross validation).  In practice, a simple recommendation is to set $\tau_{\omega,j}$ less than the range of the modeled covariate, and greater than the typical difference between observed values of the covariate.
+
+\hspace{.5in}Our main point in writing the GAM as in Eq. \ref{eq:GAM} is to emphasize the structural similarity between GLMs and certain classes
+of GAMs.  In particular,
+we can rewrite Eq. \ref{eq:GAM} as
+$\boldsymbol{\xi}={\bf X}_{aug} \boldsymbol{\beta}_{aug}$,
+where ${\bf X}_{aug} = \left[ {\bf X} \hspace{3mm} {\bf K}_j \right]$ (i.e., concatenating ${\bf X}$ and ${\bf K}_j$ horizontally), and $\boldsymbol{\beta}_{aug}=\left[  \boldsymbol{\beta} \hspace{3mm} \boldsymbol{\alpha}_j \right] ^\prime$ (the subscript $aug$ denotes augmentation).  We shall exploit this structure when examining
+extrapolation bias.  We note that similar formulations for GAMs (e.g. using thin plate splines) can be represented in a similar form \citep[cf.][]{CrainiceanuEtAl2005}.
+
+\subsection{Introducing spatial and/or temporal autocorrelation: spatio-temporal regression models (STRMs)}
+
+The previous two modeling frameworks (GLMs and GAMs) do not acknowledge spatial autocorrelation above and beyond that induced
+by modeled covariates.  However, it is common for residuals from GLM and GAM model fits to include spatial autocorrelation, which violates their common assumption of independently distributed error \citep{Legendre1993,LichsteinEtAl2002}.  Parameter estimates from GLMs and GAMs that display residual autocorrelation should be interpreted with caution, as they will tend to have overstated precision and may even be biased.  In such situations, analysts often employ spatial regression models which explicitly account for spatial autocorrelation above and beyond that explained by modeled covariates.
+
+\hspace{.5in}There are a variety of ways spatial autocorrelation can be included in regression models, depending on (i) the spatial support (i.e., continuous vs. discrete), and (ii) the particular mechanism used to impart correlation.  Here, we shall focus on areal models for discrete spatial support, as our impression is that these are more commonly employed in ecological studies.  Such models require that data are aggregated at the level of some sample unit (plots, grid cells, etc.).  Spatio-temporal regression models (STRMs) for areal data are often specified in a similar fashion to GLMs and GAMs:
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:spat_reg}
+  \boldsymbol{\xi}={\bf X} \boldsymbol{\beta} + \boldsymbol{\eta},
+\end{equation}
+\end{linenomath*}
+where $\boldsymbol{\eta}$ represent spatially autocorrelated effects.  In this treatment we shall limit consideration one approach for
+inducing spatial autocorrelation in $\boldsymbol{\eta}$: restricted spatial regression \citep[RSR;][]{Reich2006,Hodges2010,Hughes2013}.
+
+\hspace{.5in}The RSR approach to spatial regression uses a reduced-rank version of the popular intrinsic conditionally autoregressive \citep[ICAR;][]{Besag1995,RueHeld2005} model for spatial random effects, reparameterized so that basis vectors are orthogonal to the main effects of interest.  This approach has generated substantial recent interest, as fixed effects retain primacy in explaining variation in the ecological process of interest and problems with spatial confounding between fixed and random effects are eliminated. As such, spatial random effects are only used to account for residual autocorrelation \citep{Reich2006,Hodges2010} and the decision to incorporate spatial autocorrelation has little effect on the point estimates of fixed effects.  In addition, reduced dimension spatial models such as RSR lighten computational burden while still accounting for course-scale spatial autocorrelation \citep[see e.g.][]{LatimerEtAl2009,Wikle2010,Hughes2013}.  This approach works by reformulating the spatial random effects in Eq. \ref{eq:spat_reg} as $\boldsymbol{\eta} = {\bf K} \boldsymbol{\alpha}$, where $\alpha$ is a vector of $m$ random effects in a reduced dimension subspace.
+The matrix ${\bf K}$ can be constructed as follows \citep{Hughes2013}:
+\begin{enumerate}
+  \item Define the residual projection matrix ${\bf P}^\perp={\bf I}-{\bf X}({\bf X}^\prime{\bf X})^{-1}{\bf X}^\prime$
+  \item Calculate the Moran operator matrix $\boldsymbol{\Omega}=J{\bf P}^\perp {\bf W}{\bf P}^\perp/{\bf 1}^\prime {\bf W} {\bf 1}$, where $J$ is the number of areal survey units
+  \item Define ${\bf K}$ as an $(n \times m)$ matrix, where the columns of ${\bf K}$ are composed of the eigenvectors  associated with the largest $m$ eigenvalues of $\boldsymbol{\Omega}$. Hughes and Haran (\citeyear{Hughes2013}) used simulation to explore a range of such values and concluded $m=50-100$ should suffice for most applications.
+\end{enumerate}
+Here, ${\bf I}$ an identity matrix, ${\bf 1}$ is a column vector of ones, and ${\bf W}$ represents an association matrix describing the spatial neighborhood structure of sampling units.  For instance, for a first order neighborhood structure, ${\bf W}$ would include a 1 for all rows $i$ and columns $j$ where sampling unit $i$ and $j$ are neighbors \citep[see][for alternative association matrices]{RueHeld2005}.
+
+\section{Gibbs sampling}
+
+We now describe methods for conducting Bayesian analysis for the models described above.  We utilize Gibbs sampling, characterized by cyclically sampling groups of parameters according to their so-called full conditional distributions conditionally on data and other parameters \citep{GelmanEtAl2004}.  In some cases, we are able to solve for full conditional distributions analytically and to sample from known families of probability distributions; in others, we resort to Metropolis-Hastings steps.
+
+\subsection{Gibbs sampling for the GLM model}
+
+Our Gibbs sampler for the GLM model consists of three sets of parameter updates (1) regression parameters ($\boldsymbol{\beta}$), (2) error precision ($\tau_\epsilon$), and (3) latent log-density ($\boldsymbol{\mu}$).
+
+\underline{Sampling from $[\boldsymbol{\beta}|\cdot]$}
+
+Setting the prior for the suite of regression parameters as $[\boldsymbol{\beta}] = \mathcal{MVN}({\bf 0},(\tau_\beta X^\prime X)^{-1})$ results in the full conditional distribution
+\begin{linenomath*}
+\begin{equation*}
+   [\boldsymbol{\beta} | \cdot] \equiv \mathcal{N}(({\bf X}^\prime {\bf X})^{-1}{\bf X}^\prime \boldsymbol{\mu},({\bf X}^\prime {\bf X})^{-1} (\tau_\epsilon + \tau_\beta)^{-1}).
+\end{equation*}
+\end{linenomath*}
+We set $\tau_\beta = 0.01$ for applications described in this paper.
+
+\underline{Sampling from $[\boldsymbol{\tau_\epsilon}|\cdot]$}
+
+Specifying a conjugate $\text{Gamma}(a,b)$ prior for the precision parameter leads to a full conditional that is also Gamma distributed:
+\begin{eqnarray}
+  [\tau_\epsilon | \cdot] & \equiv & \textrm{Gamma}(0.5n + a,0.5 \boldsymbol{\Delta}^\prime \boldsymbol{\Delta} +b),
+  \label{eq:tau_eps}
+\end{eqnarray}
+where $\Delta = \boldsymbol{\mu}-{\bf X}\boldsymbol{\beta}$.  For applications in this paper we set $a=1.0$ and $b=0.01$.  This selection admits a large range of permissable parameter values while maintaining flat probability mass near the origin.
+
+\underline{Sampling from $[\boldsymbol{\mu}|\cdot]$}
+
+Although $\boldsymbol{\mu}$ could potentially be integrated out of the likelihood, its inclusion allows for easier computation of full conditionals for $\boldsymbol{\beta}$ and $\tau_\epsilon$ (and for other full conditionals once the model is expanded, for example, to GAMs and STRMs).  During the main MCMC phase, the $\boldsymbol{\mu}$ only need to be updated for grid cells that are exposed to sampling (see a subsequent section for information on posterior prediction for details on unsampled areas).  The full conditional for $\mu_s$ in a given grid cell $s$ is given by
+\begin{equation*}
+  [\mu_{s,t} | \cdot] \propto \mathcal{N}(\mu_s;{\bf X}_s \boldsymbol{\beta},\tau_\epsilon^{-0.5}) \times \textrm{Poisson}(C_s,\exp(o_s+\mu_s)),
+\end{equation*}
+where ${\bf X}_s$ gives the $s$th row of the design matrix and $o_s$ is an offset.  For our examples, quadrats are configured to represent $10\%$ of a grid cell, cell $o_s = \log(0.1)$.
+We use a Metropolis-Hastings step to sample from $[\mu_{s,t} | \cdot]$.
+
+\subsection{Gibbs sampling for the GAM model}
+
+We used a Gibbs sampler for the GAM model that looks very familiar to that for the GLM model.
+
+\underline{Sampling from $[\boldsymbol{\tau_\epsilon}|\cdot]$}
+
+Assuming a Gamma($a,b$) prior, the full conditional for $\boldsymbol{\tau_\epsilon}$ is once again given by Eq. \ref{eq:tau_eps}.  In this case,
+$\Delta = \boldsymbol{\mu}-{\bf X}\boldsymbol{\beta}-{\bf K}\boldsymbol{\alpha}$.
+
+\underline{Sampling from $[\boldsymbol{\mu}|\cdot]$}
+
+The full conditional for $\mu_s$ in a given grid cell $s$ is given by
+\begin{equation*}
+  [\mu_{s,t} | \cdot] \propto \mathcal{N}(\mu_s;{\bf X}\boldsymbol{\beta}+{\bf K}_s \boldsymbol{\alpha},\tau_\epsilon^{-0.5}) \times \textrm{Poisson}(C_s,\exp(o_s+\mu_s)),
+\end{equation*}
+where ${\bf K}_s$ gives the $s$th row of ${\bf K}$.
+
+\underline{Sampling from $[\boldsymbol{\alpha}|\cdot]$}
+
+We impose a Gaussian prior on smoothing kernel weights, $\boldsymbol{\alpha} \sim \mathcal{N}(0,\tau_\alpha^{-1})$.  Like $\boldsymbol{\beta}$, the resulting full conditional is once again in closed form:
+\begin{linenomath*}
+\begin{equation*}
+   [\boldsymbol{\alpha} | \cdot] \equiv \mathcal{MVN}(({\bf K}^\prime {\bf K})^{-1}{\bf K}^\prime (\boldsymbol{\mu}-{\bf X}\boldsymbol{\beta}),({\bf K}^\prime {\bf K}^{-1} (\tau_\epsilon + \tau_\alpha)^{-1}).
+\end{equation*}
+\end{linenomath*}
+We set $\tau_\alpha = 0.01$ in all subsequent applications.
+
+
+\subsection{Gibbs sampler for the STRM model}
+
+The Gibbs sampler for the RSR version of the STRM model consists of the following:
+
+\underline{Sampling from $[\boldsymbol{\beta}|\cdot]$}
+
+Using the same prior as for the GLM results in the full conditional distribution
+\begin{linenomath*}
+\begin{equation*}
+   [\boldsymbol{\beta} | \cdot] \equiv \mathcal{N}(({\bf X}^\prime {\bf X})^{-1}{\bf X}^\prime (\boldsymbol{\mu}-{\bf K}\boldsymbol{\alpha}),({\bf X}^\prime {\bf X})^{-1} (\tau_\epsilon + \tau_\beta)^{-1}).
+\end{equation*}
+\end{linenomath*}
+
+\underline{Sampling from $[\boldsymbol{\mu}|\cdot]$}
+
+The full conditional for $\mu_s$ in a given grid cell $s$ is given by
+\begin{equation*}
+  [\mu_{s,t} | \cdot] \propto \mathcal{N}(\mu_s;{\bf X}_s \boldsymbol{\beta}+{\bf K}_s \boldsymbol{\alpha},\tau_\epsilon^{-0.5}) \times \textrm{Poisson}(C_s,\exp(o_s+\mu_s)),
+\end{equation*}
+where ${\bf K}_s$ gives the $s$th row of ${\bf K}$.
+
+\underline{Sampling from $[\tau_\epsilon|\cdot]$}
+
+The full conditional is the same as for the GAM model with the replacement $\Delta = \boldsymbol{\mu}-{\bf X}\boldsymbol{\beta}-{\bf K}\boldsymbol{\alpha}$.
+
+\underline{Sampling from $[\boldsymbol{\alpha}|\cdot]$}
+
+In the RSR model, the implied prior for reduced dimension spatial effects is $\boldsymbol{\alpha} \sim \mathcal{MVN}(0,\tau_\eta^{-1}{\bf K}^\prime {\bf Q} {\bf K})$.  The resulting full conditional is
+\begin{linenomath*}
+\begin{eqnarray*}
+   [\boldsymbol{\alpha} | \cdot] & = & \mathcal{MVN}({\bf M},\boldsymbol{\Sigma}), \text{ where} \\
+   \boldsymbol{\Sigma}^{-1} & = & {\bf K}^\prime {\bf K}\tau_\epsilon+\tau_\eta{\bf K}^\prime {\bf Q} {\bf K} \text{ and} \\
+    {\bf M} & = & \boldsymbol{\Sigma} \tau_\epsilon {\bf K}^\prime (\boldsymbol{\mu} - {\bf X} \boldsymbol{\beta}).
+\end{eqnarray*}
+\end{linenomath*}
+See for example, \citet{ConnEtAl2014}.
+
+\underline{Sampling from $\tau_\eta|\cdot]$}
+
+Using a conjugate Gamma$(a,b)$ prior on $\tau_\eta$, we have
+  \begin{equation*}
+  \tau_{\eta} \sim {\rm Gamma}(0.5m + a,0.5 \boldsymbol{\alpha}^\prime
+  {\bf K}^\prime {\bf Q} {\bf K}\boldsymbol{\alpha}+b).
+  \end{equation*}
+  Here, $m$ is the number of $\boldsymbol{\alpha}$ parameters.\\
+
+
+\subsection{Generating posterior predictions}
+If all we wanted to do was to estimate regression coefficients, the previous samplers would suffice.  However, we typically also wish to predict animal abundance across the landscape to come up with a total abundance estimate and produce a density map.  Fortunately, this is easy to do using posterior prediction, which consists of the following steps:
+\begin{enumerate}
+\item For each of $n$ samples (where $n$ is the desired posterior predictive sample size), choose an iteration of the MCMC sampler randomly with replacement (call this iteration $t$).
+\item Label the $t$th sample of $\boldsymbol{\alpha}$, $\boldsymbol{\beta}$, $\boldsymbol{\tau_\epsilon}$, and $\boldsymbol{\mu}$ as $\boldsymbol{\alpha}^{(t)}$, $\boldsymbol{\beta}^{(t)}$, $\boldsymbol{\tau_\epsilon}^{(t)}$, and $\boldsymbol{\mu}^{(t)}$, respectively.  Recall that $\boldsymbol{\mu}^{(t)}$ is only available for sampled grid cells.
+\item For unsampled grid cells, generate $\boldsymbol{\mu}^{(t)} \sim \mathcal{N}({\bf X}\boldsymbol{\beta}^{(t)}+{\bf K}\boldsymbol{\alpha}^{(t)},\tau_\epsilon^{(t)})$
+\item Sample ${\bf N}^{(t)} \sim \text{Poisson}(\boldsymbol{\mu}^{(t)})$, where ${\bf N}^{(t)}$ is a vector of posterior predictions across the landscape.
+\item Compute a posterior prediction for total abundance as $N^{(t)}=\sum_s N_s^{(t)}$.
+\end{enumerate}
+
+\subsection{Calculating the gIVH}
+
+
+In order to calculate prediction variance on the real scale for generalized models, one can use a procedure such as the delta method \citep{Dorfman1938}, or in the case of Bayesian inference, can simply calculate posterior predictive variance of $\boldsymbol{\lambda}_x$.  For the delta method approach, we can write the variance of the Poisson expectation as
+\begin{linenomath*}
+\begin{eqnarray}
+  \label{eq:var-lambda}
+  {\rm var}(\boldsymbol{\lambda}_x) & = & {\rm var}(g(\boldsymbol{\mu}_x)) \\
+  & \approx & \boldsymbol{\Delta} {\rm var}(\boldsymbol{\mu}_x)\boldsymbol{\Delta}^\prime,
+%  \boldsymbol{\Delta} & = & \left[ \begin{array}{cccc}
+%      \frac{\partial g(\mu_1)}{\partial \mu_1} & \frac{\partial g(\mu_1)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_1)}{\partial \mu_n} \\
+%      \frac{\partial g(\mu_2)}{\partial \mu_1} & \frac{\partial g(\mu_2)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_2)}{\partial \mu_n} \\
+%      \vdots & \vdots & \ddots & \vdots \\
+%      \frac{\partial g(\mu_n)}{\partial \mu_1} & \frac{\partial g(\mu_n)}{\partial \mu_2} & %\hdots & \frac{\partial g(\mu_n)}{\partial \mu_n} \\
+%  \end{array} \right].
+\end{eqnarray}
+\end{linenomath*}
+where $\boldsymbol{\Delta}$ is a matrix of partial derivatives $\partial g(\mu_r)/\partial \mu_c$ ($r$ and $c$ denoting rows and columns of $\boldsymbol{\Delta}$, respectively).  Under common univariate link functions (e.g. log, logit, probit), $\boldsymbol{\Delta}$ has a diagonal form, while for multivariate links (e.g. multinomial logit) $\boldsymbol{\Delta}$ will be dense.
+
+\hspace{.5in} Unlike Cook's original formulation, the gIVH will often involve unknown parameters.  Further, the exact form of ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ depends on the underlying model structure and estimation procedure.  We impose a probability distribution $[\boldsymbol{\theta}]$ for unknown parameters, and compute prediction variance as
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:E_var_lambda}
+  {\rm var}(\boldsymbol{\lambda}_x | {\bf Y}) = \int_{\boldsymbol{\theta}} {\rm var}(\boldsymbol{\lambda}_x | {\bf Y}, \boldsymbol{\theta}) [\boldsymbol{\theta}] d \boldsymbol{\theta}.
+\end{equation}
+\end{linenomath*}
+
+\hspace{.5in} Our approach in this paper is to conduct a Bayesian analysis (using the Gibbs sampling algorithms outlined above) and to use posterior predictive inference to summarize ${\rm var}(\boldsymbol{\lambda}_x | {\bf Y})$.  Although we use a Bayesian formulation for modeling convenience, one could also consider substituting parametric approximations for ${\rm Var}(\mu_x)$ and $\mu_x$ based on output from standard likelihood-based analyses.
+
+
+\renewcommand{\refname}{Literature Cited}
+\bibliographystyle{ecology}
+
+\bibliography{master_bib}
+
+\end{flushleft}
+\end{document}
+
+
+
+
+

@@ -138,7 +138,5 @@ Summary$Bias=-1.1
 bias.plot=bias.plot + geom_text(data=Means,aes(label=Bias.mean))
 bias.plot=bias.plot + geom_text(data=Summary,aes(label=N.above.2))
 
-pdf("bias_generic.pdf")
-bias.plot
-dev.off()
+ggsave(filename="bias_generic.tiff")
 

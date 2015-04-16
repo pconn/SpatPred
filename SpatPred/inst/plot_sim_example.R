@@ -54,7 +54,7 @@ Est.clust=plot_N_map(1,N,Grid=Grid.list,leg.title="N",highlight=which(MCMC.clust
 df<-data.frame(id=ids,Easting=XY[Effort.clust$Mapping,"x"],Northing=XY[Effort.clust$Mapping,"y"],Abundance=1)
 Est.clust=Est.clust+geom_point(data=df,aes(x=Easting,y=Northing),shape=3,size=2)+ggtitle("F. Convenience")+theme(plot.title = element_text(hjust = 0,size = rel(4)),legend.text=element_text(size=rel(3)),legend.title=element_text(size=rel(3)),text=element_text(size=rel(3)))+xlab('')+ylab('') #+theme(plot.title = element_text(hjust = 0,size = rel(1.5)),legend.position="none",axis.ticks = element_blank(), axis.text = element_blank())
 
-pdf(file="sim_maps.pdf")
+tiff(file="sim_maps.tiff",res=300,height=8,width=8,units='in')
 grid.arrange(arrangeGrob(Cov1,Cov2,Cov3,N.plot,Est.sys,Est.clust,widths=unit(0.5,"npc"),heights=unit(0.33,"npc"),nrow=3))
 dev.off()
 

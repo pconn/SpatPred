@@ -219,7 +219,7 @@ rsr.ice0.plot=rsr.ice0.plot+ggtitle("F. STRM (Pseudo-absence)")+scale_fill_gradi
 
 
 library(gridExtra)
-pdf(file="ribbon_maps.pdf")
+tiff(file="ribbon_maps.tiff",res=300,height=8,width=8,units='in')
 grid.arrange(arrangeGrob(naive.glm.plot,ice0.glm.plot,naive.gam.plot,ice0.gam.plot,naive.rsr.plot,rsr.ice0.plot,nrow=3,widths=unit(0.5,"npc"),heights=unit(0.33,"npc")))
 dev.off()
 

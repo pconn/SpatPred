@@ -87,7 +87,7 @@ XpXinv=solve(crossprod(X))
 for(i in 1:160000)Xnew.eval[i]=t(Xnew[i,])%*%XpXinv%*%Xnew[i,]
 Extrap=(Xnew.eval>max.IVH)
 
-my.theme=theme(plot.title = element_text(hjust = -.1),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.position="none")
+my.theme=theme(plot.title = element_text(hjust = 0),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.position="none")
 
 DF=data.frame(x=Xnew[,2],y=Xnew[,3],resp=Extrap)
 DF.data=data.frame(x=x,y=y)
@@ -133,7 +133,7 @@ XpXinv=solve(crossprod(X))
 for(i in 1:160000)Xnew.eval[i]=t(Xnew[i,])%*%XpXinv%*%Xnew[i,]
 Extrap=(Xnew.eval>max.IVH)
 
-my.theme=theme(plot.title = element_text(hjust = -.1),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.position="none")
+my.theme=theme(plot.title = element_text(hjust = 0),strip.text=element_text(face="bold"),axis.title=element_text(size=16),text=element_text(size=16),legend.position="none")
 
 DF=data.frame(x=Xnew[,2],y=Xnew[,3],resp=Extrap)
 DF.data=data.frame(x=x,y=y)
@@ -146,7 +146,7 @@ pdf(file="IVH_simple2.pdf")
 grid.arrange(arrangeGrob(linear.plot,quad.plot,plot.biv,plot.biv.2,nrow=2,widths=unit.c(unit(.5,"npc"))))
 dev.off()
 
-tiff(file="IVH_simple2.tiff")
+tiff(file="IVH_simple2.tiff",res=300,width=8,height=8,units='in')
 grid.arrange(arrangeGrob(linear.plot,quad.plot,plot.biv,plot.biv.2,nrow=2,widths=unit.c(unit(.5,"npc"))))
 dev.off()
 
