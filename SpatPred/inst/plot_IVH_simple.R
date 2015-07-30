@@ -146,7 +146,7 @@ pdf(file="IVH_simple2.pdf")
 grid.arrange(arrangeGrob(linear.plot,quad.plot,plot.biv,plot.biv.2,nrow=2,widths=unit.c(unit(.5,"npc"))))
 dev.off()
 
-tiff(file="IVH_simple2.tiff",res=300,width=8,height=8,units='in')
+tiff(file="IVH_simple2.tiff",res=300,width=8,height=8,units='in',compression='lzw')
 grid.arrange(arrangeGrob(linear.plot,quad.plot,plot.biv,plot.biv.2,nrow=2,widths=unit.c(unit(.5,"npc"))))
 dev.off()
 

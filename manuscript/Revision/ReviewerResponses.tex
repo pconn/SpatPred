@@ -1,0 +1,294 @@
+%  This document must be used with LaTeX 2e!!!
+
+%  See the documentation ``The biometrics class'' by
+%  Josephine Collis for more information
+
+%  Be sure to put the files biometrics.sty and biometrics.bst
+%  in the same directory as your latex file.  Also put the .bib
+%  file -- see below
+
+\documentclass[12pt,fleqn]{article}
+%\documentclass[12pt,a4paper]{article}
+\usepackage{biometrics}
+\usepackage{amsmath,epsfig,epsf,psfrag,color}
+%\usepackage{a4wide,amsmath,epsfig,epsf,psfrag}
+\usepackage[nolists]{endfloat}
+
+%  put your commands here
+
+\def\be{{\ensuremath\mathbf{e}}}
+\def\bx{{\ensuremath\mathbf{x}}}
+\def\bthet{{\ensuremath\boldsymbol{\theta}}}
+\newcommand{\VS}{V\&S}
+\newcommand{\tr}{\mbox{tr}}
+
+\begin{document}
+
+\bf \hspace{-.32in} Conn et al. responses to reviewer comments
+
+%  make sure that the document has 25 lines per page (it is 12 pt)
+
+\setlength{\textheight}{575pt} \setlength{\baselineskip}{23pt}
+
+%  IMPORTANT -- place the \title, \author, etc, \begin{summary}...
+%  \end{summary} \keywords statements in the order demonstrated below
+\rm
+Here, we provide line by line responses to reviewer comments, suggestions, and edits.  For completeness, we include all reviewer comments in addition to our responses (our responses are in blue).
+
+\section{General}
+The authors present a potentially extremely useful extension of a classical model checking technique. I would like to
+congratulate the authors on a succinct and clear paper. On the whole I think the paper is publishable aside from a couple of
+clarifications. However, I would like to make the suggestions below to (hopefully) make the paper more easily understandable
+to a wider audience and to put it into a broader context.
+
+I would also like to thank the authors for putting their data and code online during the review process, this made it very easy
+to understand their methods.
+
+I have included comments below and direct comments as annotations on the PDF of the paper and appendices. Please note
+that the annotations are not simply typos, there are major points there too.
+
+\textcolor{blue}{
+We thank the reviewer for the effort they put forth to review our submission and for their constructive criticism (particularly with regard to appealing to a larger audience by including frequentist GAMs).  We really appreciate the thought that went into this - hopefully it will make it into a much better paper.
+}
+\textcolor{blue}{
+We include point by point responses to comments and annotations made on the PDFs after responding to major comments below.
+}
+
+\section{Context}
+The authors may be interested in a recent paper by Mannocci et al (2015) where "envelope models" (i.e. max/min of
+covariates used as cutoff in predictions) are developed (disclosure: I reviewed that paper). It may be interesting to compare
+the differences in the resulting abundance estimates given the envelope approach. I had suggested in my review of Mannocci's
+paper that they think about quantiles rather than max/min but this proved to exclude too many observations in their examples.
+
+\textcolor{blue}{
+We had not seen this paper and thank the reviewer for bringing it to our attention.  In the Discussion (lines 330-340), we now cite Mannocci et al (2015) and try to situate the gIVH as an alternative method for envelope specification.  We now state that
+}
+
+\textcolor{blue}{
+``In the field of SDM modeling, researchers often stress the need for prediction locations to be similar to the locations used for model development~\cite{ElithLeathwick2009}.  One way to accomplish this is through a prediction envelope, whereby a specific criterion is used to limit predictions of animal density or occurrence to the range of conditions and covariates encountered during surveys~\cite{MannocciEtAl2015}.  Using the gIVH for this purpose will likely be more conservative than envelope specifications based on other criterion (e.g., in contrast to minimum an maximum observed covariate values as in~\cite{MannocciEtAl2015}), but is more in line with linear modeling theory.  A comparison of envelope specification methods is beyond the scope of this paper, but we suspect there are cases where specific strategies that seem intuitive can result in poor predictions, particularly when the form of prediction models is of high dimension and/or includes multiple interaction terms."
+}
+
+\textcolor{blue}{
+As we indicate in the text, we believe a comparison of alternative envelope specifications, while of general interest, is beyond the scope of the paper. In particular, we suspect that relative performance of different envelopes will likely depend on a large number of factors (including, but not limited to, the complexity of the estimation model).
+}
+
+\section{GLM/GAM Theory}
+
+In Wood (2006) p. 245 and elsewhere, {\bf x} is referred to as ``${\bf X}_P$" or the ``lpmatrix ". That is, the matrix that maps the
+parameters to the predictions on the link scale. The authors may want to incorporate this terminology and explanation into the
+article.
+In a frequentist GAM, one can then apply the delta method (as the authors have done) to obtain the prediction variance on the
+response scale or use a parametric bootstrap (see e.g. Marra, Miller and Zanin 2011, Augustin et al 2013 or Miller et al 2013,
+Appendix B). See below for more on this.
+
+\textcolor{blue}{
+We have maintained our original notation in the main article, but now specifically indicate in S1 Text that \cite{Wood2006} terms {\bf x} the ``lpmatrix" and provides methods to output it in the \texttt{mgcv} package.  In the main article text, we also indicate the possibility of using parametric bootstrapping as an alternative to the delta method and cite the articles the reviewer suggested (lines 147-151).  Further information, including new details regarding frequentist GAMs, is provided in S1 Text.
+}
+
+\section{Other models}
+
+{\it Flexible frequentist models}. Examples in the paper are all in a Bayesian setting. I'm not about to argue that there is any
+problem with this at all BUT it might draw more people to the paper if there were a frequentist example too. Since the authors
+were so kind as to put their data and code online, I took the liberty of fitting a GAM to their data and calculating the gIVH for a
+frequentist GAM (using the R package mgcv ). Though I am sure that I have made some slight mistakes in the precise format
+of the data, the predicted abundance I obtained using the gIVH was about 47,827, down from 301,557 without using gIVH.
+This estimate seems on the low side compared to the posterior prediction quantiles reported (see next comment for more on
+this). I have included the code to do this with the review, in the hope this will be useful (with apologies it is not sufficiently well
+commented).
+
+\textcolor{blue}{
+We agree that an exploration of applying gIVH ideas to frequentist GAMs would be useful for drawing in a wider audience.  We went ahead and replaced our Bayesian GAMs (which didn't really work very well anyway) with results from applying frequentist GAMs via \texttt{mgcv}.  We did this both with regards to simulations and the ribbon seal example and include details and implementation instructions in S1 Text.  We have reused portions of the reviewer's R code for this purpose, and give him credit in both the relevant R script as well as the acknowledgments section of the main article (we hope that's okay - thanks for providing it!).
+}
+
+\textcolor{blue}{
+There is undoubtedly some substantial model-to-model uncertainty here, likely because the epicenter of ribbon seal abundance was poorly sampled. Some of the discrepancy that the reviewer notes between predicted abundance from the gIVH-restricted GAM and the Bayesian estimation approaches likely has to do with a considerably larger number of locations that fall out of the gIVH in the GAM model.  A better comparison would be to restrict comparison of total abundance for cells that fall within the gIVH for {\it all} fitted models so that the total number of cells contributing to the abundance estimate is the same for each model.  We now make this comparison when describing results from the ribbon seal example.  Although the GAM produced an estimate that bordered on ``significantly" higher than the GLM model when estimating total abundance for the entire study area, estimates are actually remarkably similar when restricted to this multi-model gIVH envelope.
+}
+
+Models with large number of parameters. Cook (1979) says "since the v are increasing functions of p, outliers become more
+difficult to detect as the model is enlarged" (p. 172). It would be interesting to know what happens when we have complex
+models (i.e. some GAMs I fit have 100s if not 1000s of parameters) and see how well the gIVH performs. This could be done
+simply by increasing the spline basis size. My observation was that spline basis size made quite a big difference to the result;
+increasing the basis size of my GAM from 5 to 9 reduced the abundance estimate considerably. This probably bears more
+thought than I have given it so far.
+
+\textcolor{blue}{
+We're not sure what can be said theoretically about the relationship of the gIVH and model complexity in the generalized case.  For example, playing around with basis size for a quasipoisson GAM in the ribbon seal example, we obtained the following:}
+
+\vspace{0.3in}
+\begin{tabular}{lll}
+\hline
+Knots & gIVH size (no. cells) & $\hat{N}$ - all cells \\
+\hline
+3 & 30 & 92000 \\
+4 & 47 & 118000 \\
+5 & 56 & 121000 \\
+7 & 61 & 288000 \\
+9 & 46 & 219000 \\
+\hline
+\end{tabular}
+\vspace{0.3in}
+
+\textcolor{blue}{
+ This result conformed to our a priori expectation that increasing the basis size increases the number of effective parameters and thereby (a) increases the chances that a given sampling unit will be out of the gIVH (after all, with a ``dot" model, all cells are within the gIVH by definition), and (b) will tend to increase abundance since there is a greater potential for extrapolation past the range of observed data (that, and effectively increasing the variance on a right skewed distribution).  However, it's not quite so clear cut, as the $s=9$ point shows.
+}
+
+\textcolor{blue}{
+ Given that it may be difficult to say anything generally about model complexity and the gIVH, we have not attempted to address this issue directly.  We do however note that, with regards to future work on ribbon seals, that ``Although not reported here, additional model fitted to the data suggested sensitivity to model complexity and choice of basis, both of which are worthy of additional investigation."  (end of Ribbon Seal results section, lines 304-306).
+}
+
+\section{Plots}  
+
+As commented in the paper, I would advise against the use of the "rainbow" colour scheme. For folks like myself who are
+colourblind, these are a stuggle. Even for those who are not disabled, they are problematic. See e.g. Borland and Taylor
+(2007).
+
+\textcolor{blue}{
+We have change our color schemes from rainbow to monochromatic ones available in RColorBrewer.  Hopefully this will make plots more discernable to colorblind folks and will help with viewing if printed in black and white.
+}
+
+\section{Annotated PDF comments}
+
+\subsection{Article}
+
+Abstract.  May want to say via what method here? 
+
+\textcolor{blue}{We now state (last sentence in abstract, lines 17-20) that ``We suggest that ecologists routinely use diagnostics such as the gIVH to help gauge the reliability of predictions from statistical models (such as generalized linear, generalized additive, and spatio-temporal regression models)."}
+
+Line 60.  May want to be more specific about the kind of model(s) here.
+
+\textcolor{blue}{We have added the following sentence to the end of the introduction (lines 62-64): ``In particular, we examine the performance of the gIVH in identifying problematic extrapolations when modeling survey counts using GAMs, GLMs, and STRMs."}
+
+Line 71.  ``In both geographical and covariate space"
+\textcolor{blue}{parenthetical added}
+
+Clarify: you mean $v=max(diag(V_{LR}))$? 
+\textcolor{blue}{definition added}
+
+Lines 104-106.  Do you mean response distributions?
+\textcolor{blue}{Our understanding is that ``error distribution" and ``response distribution" are somewhat interchangeable, but we prefer the authors suggestion - changed to ``response distribution."}
+
+Lines 106-107.  citation/expand on this?
+\textcolor{blue}{This was poorly stated.  We've replaced ``for models with more general spatial structure" with "for more complicated models with prior distributions on parameters, as with hierarchical models."}
+
+Lines 114-115  “observed design points” is kind of odd terminology: design points in a linear model may be observed but e.g. a GAM or spline or quadratic model the basis evaluations are not really "observed” in the same way.
+
+I understand why you have this observed/unobserved given the models you talk about next but it would be better IMHO to use more precise terminology here to keep it open to a more general audience?
+
+\textcolor{blue}{This is a good point.  We chose this terminology for generality (i.e. one need not necessarily be talking about spatially referenced data), but given the motivating topic of SDM modeling, this generality probably isn't needed.  Changed to ``the set of locations where data are observed." (lines 116-117)}
+
+Line 129. See $L_p$ matrix stuff in Wood (2006), see long comments.
+
+\textcolor{blue}{
+We have maintained our original notation in the main article, but now specifically indicate in S1 Text that \cite{Wood2006} terms {\bf x} the ``lpmatrix" and provides methods to output it in the \texttt{mgcv} package.
+}
+
+Line 132. Or simulation based methods? See long comments.
+
+\textcolor{blue}{
+We now indicate the possibility of using parametric bootstrapping as an alternative to the delta method in the main text, citing the articles the reviewer suggested (lines 147-151).  Further details, including new details regarding frequentist GAMs, are provided in S1 Text.
+}
+
+Line 138.  Expand on ``. . . will often involve unknown parameters. . . "  I'm not sure what you mean.
+
+\textcolor{blue}{
+If trying to use the gIVH for survey planning, one potentially won't have any data, just a proposed model structure.  In this case, one would need to integrate across prior parameter distributions to produce the gIVH.  That's what we were (admittedly obtusely) trying to get at.  However, I think this is implicit in posterior prediction and we now omit this description.
+}
+
+Line 169.  1.0 not 100\%
+\textcolor{blue}{
+changed}
+
+Line 224.  Picky question: was there sensitivity to knot choice? I know this is not the point of the paper, but knot selection is hard.
+\textcolor{blue}{
+Yes, there was sensitivity to knot choice, especially with regards to endpoint behavior.  We weren't really happy with how this model turned out, and have eliminated it from the study (replacing it with frequentist GAMs fitted with \texttt{mgcv}.}
+
+Line 248.  [RE: pseudo-absence stuff] This seems a little ad hoc, do you have some references to back this up? Can you show the sensitivity in the results to this and what it’s going to the gIVH.
+\textcolor{blue}{We agree that this is a little ad hoc but feel that this approach results in much better estimates. The main issue was that models without these pseudo-absences (which we've renamed ``presumed absences" in the revision to differentiate it from ``pseudo-absences" as used in the presence-only SDM literature) is that there were no surveys conducted over open water so there are few data to inform the y-intercept of the ice concentration - seal count function. Although this tactic is quite specific to our study population, we believe it is a reasonable one.  We do show the resulting estimates and gIVHs with and without ``presumed absences" in Fig. 6.
+}
+
+Line 265. Was this down to knot placement or number issues?
+\textcolor{blue}{Again, we've removed our kludgy Bayesian GAM model in favor of \texttt{mgcv}.
+}
+
+Line 276. Commas separating thousands and spaces after commas separating numbers! Otherwise this is very hard to read.
+\textcolor{blue}{Changed as as suggested.
+}
+
+Figure 2 Caption.  Hard to tell from the low res graphics but the cells outside the gIVH are all overestimates?  Might be easier to plot the bottom two as error surfaces i.e. prediction-truth?  Are the latter two plots an average of just one realisation from the simulation?
+ \textcolor{blue}{It's unfortunate that the PLoS changes figures to low res for the review - although the rainbow coloration probably doesn't help given the reviewer's color blindness.  We have changed the color schemes in this figure to monochromatic ones from RColorBrewer.  This should show that many of the convenience sample estimates in the gIVH are overestimates (but that the spatially balanced estimates look okay for this particular realization).  This plot includes estimates from a single simulation replicate for illustration - we have changed the plot title from ``Depiction of a single simulation scenario" to ``Depiction of a single simulation replicate" to make this more explicit. We considered changing the bottom two plots to bias, but decided that we preferred absolute abundance here.
+}
+
+Fig. 4. Should the brown and orange lines be the other way around?
+Add someone who is colour-blind it would be better to use more distinct and colour-blind friendly colours.
+ \textcolor{blue}{Yes, we had this backwards and have fixed this in the figure caption.  We aren't sure what other colors would be better to use here... however, we have made the orange depth contour line into a dashed line so that all readers should be able to differentiate the two.
+}
+
+\subsection{S1 Text}
+
+Page 1.  this is defined backwards, it would be better to say what the linear predictor is before defining mu in terms of it
+
+\textcolor{blue}{
+Our preference is to provide equations and then define the elements in them, rather than the other way around.  This seemed like a relatively standard way of doing things, so we have left the text as is.
+}
+
+End of section 1.2.  You mean that you can use different basis functions? 
+\textcolor{blue}{
+Yes, we were getting at different basis functions.  This section has been substantially reformatted, but we now describe ${\bf K}$ as a matrix specified using smooth basis functions.
+}
+
+Section 1.3.  Remove “Parameter estimates from”? 
+\textcolor{blue}{
+Removed.
+}
+
+Section 2.  \textcolor{blue}{
+Missing citation added
+}
+
+Section 2.5.  I think this should be in the paper rather than appendix.
+\textcolor{blue}{We have incorporated information from this section into the main body of the paper (see lines 128-151 in main article text). }
+
+Section 2.5.  As in main article, this [regarding unknown parameters when calculating the gIVH] requires further explanation.
+\textcolor{blue}{The gIVH is analytically defined for linear regression, but not necessarily for STRMs which have prior distributions, random effects, etc.  We have made an attempt to flesh this out in the main article text.}
+
+\subsection{S2 Text}
+
+Page 1. delete `animal population' in bullet 3
+\textcolor{blue}{Done}
+
+Page 4, on simulating count data. Is this realistic given usual aerial survey procedure? Would it not be more realistic to generate lines and find cells underneath rather than randomly generating cells?
+\textcolor{blue}{We think this a realistic test of a plot-based sampling, which seems like an adequate simulation test for the gIVH.  Although we used aerial transect surveys in the ribbon seal example, the ideas behind the gIVH pertain to multiple types of sampling, including plot-based counts, transect surveys, etc.}
+
+
+\bibliographystyle{biometrics}
+\bibliography{master_bib}
+
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

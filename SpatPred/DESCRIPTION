@@ -2,7 +2,7 @@ Package: SpatPred
 Maintainer: Paul B Conn <paul.conn@noaa.gov>
 License: Unlimited
 Title: Functions for computing the generalized independent variable hull (gIVH)
-    and conducting analyses from Conn et al. paper
+    and conducting analyses from Conn et al. PLOS ONE paper
 Type: Package
 LazyLoad: yes
 Author: P.B. Conn \email{paul.conn@@noaa.gov}
@@ -12,7 +12,7 @@ Description: Functions and scripts for computing the generalized independent
     analyzing ribbon seal data in the Bering Sea, as reported in the article
     "On extrapolating past the range of observed data when making statistical
     predictions in ecology" by Conn et al.
-Version: 0.9
+Version: 1.0
 Depends:
     ggplot2,
     rgeos,
@@ -22,7 +22,7 @@ Depends:
     RandomFields,
     RColorBrewer,
     spsurvey,
-    plyr,
     grid,
-    spatstat
-Date: 2015-03-23
+    spatstat,
+    gridExtra
+Date: 2015-07-30

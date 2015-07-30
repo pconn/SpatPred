@@ -120,12 +120,15 @@ d_biv_normal<-function(Tmp.vec,XY,Sigma){
 #' @param leg.title Title for legend of plot (if different from the default "Abundance")
 #' @param hcolor If highight provided, gives color for highlighting (default = "yellow")
 #' @param cur.max If provided, sets maximum value for plotted abundance
+#' @param rainbow If TRUE, use rainbow plot; otherwise use color blind safe palette
 #' @return An abundance map
+#' @import sp ggplot2 RColorBrewer rgeos
 #' @export 
 #' @keywords abundance map, plot
 #' @author Paul Conn \email{paul.conn@@noaa.gov}
-plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundance",hcolor='yellow',cur.max=NULL){
-  myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral")))  
+plot_N_map<-function(cur.t,N,Grid,highlight=NULL,cell.width=1,leg.title="Abundance",hcolor='yellow',cur.max=NULL,rainbow=F){
+  if(rainbow)myPalette <- colorRampPalette(rev(brewer.pal(11, "Spectral"))) 
+  if(!rainbow)myPalette <- colorRampPalette(rev(brewer.pal(9, "YlOrRd")))
   Tmp=Grid[[1]]
   if(is.null(highlight)==FALSE){
     midpoints=data.frame(gCentroid(Tmp[highlight,],byid=TRUE))

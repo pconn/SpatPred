@@ -3,6 +3,7 @@
 #' @param n.covs Number of habitat covariates (default 4)
 #' @param tau.epsilon Precision of exchangeable errors in log space
 #' @return A SpatialPolygonsDataFrame holding covariates, abundance, and lambda (expected abundance)
+#' @import mvtnorm RandomFields spatstat gridExtra
 #' @export
 #' @keywords spatio-temporal, simulation
 #' @author Paul B. Conn
@@ -73,7 +74,6 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
     Cov.plot=ggplot()+geom_density(data=Cor.df,aes(x=Cor))+xlab("Correlation coefficient")+ylab("Density")+
       theme(plot.title = element_text(hjust = 0),axis.text=element_text(size=rel(1.5)),title=element_text(size=rel(1.5)))+ggtitle("D.")
     pdf(file="Covs_coregion.pdf")
-    library(gridExtra)
     grid.arrange(arrangeGrob(Grid.plot1,Grid.plot2,Grid.plot3,Cov.plot,nrow=2))
     dev.off()
   }
@@ -128,6 +128,7 @@ sim_data_generic<-function(S,n.covs=4,tau.epsilon=100){
 #' @param prop.sampled A numeric value giving the proportion of each survey unit that is actually sampled (default 0.1)
 #' @param n.points Number of survey units that are sampled.  The default is to round (0.1*S)
 #' @return A data.frame with two columns, "Mapping" - indicating which survey units are sampled, and "Counts" - giving no. of animals counted
+#' @import spsurvey grid
 #' @export
 #' @keywords spatio-temporal, simulation
 #' @author Paul B. Conn

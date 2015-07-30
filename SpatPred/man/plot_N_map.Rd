@@ -4,7 +4,8 @@
 \title{Function to plot abundance map for Bering Sea survey grid}
 \usage{
 plot_N_map(cur.t, N, Grid, highlight = NULL, cell.width = 1,
-  leg.title = "Abundance", hcolor = "yellow", cur.max = NULL)
+  leg.title = "Abundance", hcolor = "yellow", cur.max = NULL,
+  rainbow = F)
 }
 \arguments{
 \item{cur.t}{Time step to plot map for}
@@ -22,6 +23,8 @@ plot_N_map(cur.t, N, Grid, highlight = NULL, cell.width = 1,
 \item{hcolor}{If highight provided, gives color for highlighting (default = "yellow")}
 
 \item{cur.max}{If provided, sets maximum value for plotted abundance}
+
+\item{rainbow}{If TRUE, use rainbow plot; otherwise use color blind safe palette}
 }
 \value{
 An abundance map

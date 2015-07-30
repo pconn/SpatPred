@@ -3,6 +3,7 @@ library(sp)
 library(rgeos)
 library(ggplot2)
 library(gridExtra)
+library(RColorBrewer)
 source("./spatpred/r/util_funcs.R")
 isim=51
 S=900
@@ -33,6 +34,11 @@ Cov1 = plot_N_map(1,matrix(Grid@data$cov1,S,1),Grid=Grid.list,leg.title="Value")
 Cov2 = plot_N_map(1,matrix(Grid@data$cov2,S,1),Grid=Grid.list,leg.title="Value")+ggtitle("B. Covariate 2")+theme(plot.title = element_text(hjust = 0,size = rel(4)),legend.text=element_text(size=rel(3)),legend.title=element_text(size=rel(3)),text=element_text(size=rel(3)))+xlab('')+ylab('')
 Cov3 = plot_N_map(1,matrix(Grid@data$cov3,S,1),Grid=Grid.list,leg.title="Value")+ggtitle("C. Covariate 3")+theme(plot.title = element_text(hjust = 0,size = rel(4)),legend.text=element_text(size=rel(3)),legend.title=element_text(size=rel(3)),text=element_text(size=rel(3)))+xlab('')+ylab('')
 
+cov.palette = colorRampPalette(rev(brewer.pal(9, "Blues")))
+Cov1=Cov1+scale_fill_gradientn(colours=cov.palette(100),name="Value")
+Cov2=Cov2+scale_fill_gradientn(colours=cov.palette(100),name="Value")
+Cov3=Cov3+scale_fill_gradientn(colours=cov.palette(100),name="Value")
+
 cur.max=max(c(Grid@data$N,apply(MCMC.sys$GLM$MCMC$Pred,1,'median'),apply(MCMC.clust$GLM$MCMC$Pred,1,'median')))
 
 N.plot=plot_N_map(1,matrix(Grid@data$N,S,1),Grid=Grid.list,leg.title="N",cur.max=cur.max)+ggtitle("D. True Abundance")+theme(plot.title = element_text(hjust = 0,size = rel(4)),legend.text=element_text(size=rel(3)),legend.title=element_text(size=rel(3)),text=element_text(size=rel(3)))+xlab('')+ylab('')
@@ -54,7 +60,8 @@ Est.clust=plot_N_map(1,N,Grid=Grid.list,leg.title="N",highlight=which(MCMC.clust
 df<-data.frame(id=ids,Easting=XY[Effort.clust$Mapping,"x"],Northing=XY[Effort.clust$Mapping,"y"],Abundance=1)
 Est.clust=Est.clust+geom_point(data=df,aes(x=Easting,y=Northing),shape=3,size=2)+ggtitle("F. Convenience")+theme(plot.title = element_text(hjust = 0,size = rel(4)),legend.text=element_text(size=rel(3)),legend.title=element_text(size=rel(3)),text=element_text(size=rel(3)))+xlab('')+ylab('') #+theme(plot.title = element_text(hjust = 0,size = rel(1.5)),legend.position="none",axis.ticks = element_blank(), axis.text = element_blank())
 
-tiff(file="sim_maps.tiff",res=300,height=8,width=8,units='in')
+
+tiff(file="sim_maps.tiff",res=300,height=8,width=8,units='in',compression='lzw')
 grid.arrange(arrangeGrob(Cov1,Cov2,Cov3,N.plot,Est.sys,Est.clust,widths=unit(0.5,"npc"),heights=unit(0.33,"npc"),nrow=3))
 dev.off()
 

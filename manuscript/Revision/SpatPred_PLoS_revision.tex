@@ -1,0 +1,429 @@
+% Template for PLoS
+% Version 3.1 February 2015
+%
+% To compile to pdf, run:
+% latex plos.template
+% bibtex plos.template
+% latex plos.template
+% latex plos.template
+% dvipdf plos.template
+%
+% % % % % % % % % % % % % % % % % % % % % %
+%
+% -- IMPORTANT NOTE
+%
+% This template contains comments intended
+% to minimize problems and delays during our production
+% process. Please follow the template instructions
+% whenever possible.
+%
+% % % % % % % % % % % % % % % % % % % % % % %
+%
+% Once your paper is accepted for publication,
+% PLEASE REMOVE ALL TRACKED CHANGES in this file and leave only
+% the final text of your manuscript.
+%
+% There are no restrictions on package use within the LaTeX files except that
+% no packages listed in the template may be deleted.
+%
+% Please do not include colors or graphics in the text.
+%
+% Please do not create a heading level below \subsection. For 3rd level headings, use \paragraph{}.
+%
+% % % % % % % % % % % % % % % % % % % % % % %
+%
+% -- FIGURES AND TABLES
+%
+% Please include tables/figure captions directly after the paragraph where they are first cited in the text.
+%
+% DO NOT INCLUDE GRAPHICS IN YOUR MANUSCRIPT
+% - Figures should be uploaded separately from your manuscript file.
+% - Figures generated using LaTeX should be extracted and removed from the PDF before submission.
+% - Figures containing multiple panels/subfigures must be combined into one image file before submission.
+% For figure citations, please use "Fig." instead of "Figure".
+% See http://www.plosone.org/static/figureGuidelines for PLOS figure guidelines.
+%
+% Tables should be cell-based and may not contain:
+% - tabs/spacing/line breaks within cells to alter layout or alignment
+% - vertically-merged cells (no tabular environments within tabular environments, do not use \multirow)
+% - colors, shading, or graphic objects
+% See http://www.plosone.org/static/figureGuidelines#tables for table guidelines.
+%
+% For tables that exceed the width of the text column, use the adjustwidth environment as illustrated in the example table in text below.
+%
+% % % % % % % % % % % % % % % % % % % % % % % %
+%
+% -- EQUATIONS, MATH SYMBOLS, SUBSCRIPTS, AND SUPERSCRIPTS
+%
+% IMPORTANT
+% Below are a few tips to help format your equations and other special characters according to our specifications. For more tips to help reduce the possibility of formatting errors during conversion, please see our LaTeX guidelines at http://www.plosone.org/static/latexGuidelines
+%
+% Please be sure to include all portions of an equation in the math environment.
+%
+% Do not include text that is not math in the math environment. For example, CO2 will be CO\textsubscript{2}.
+%
+% Please add line breaks to long display equations when possible in order to fit size of the column.
+%
+% For inline equations, please do not include punctuation (commas, etc) within the math environment unless this is part of the equation.
+%
+% % % % % % % % % % % % % % % % % % % % % % % %
+%
+% Please contact latex@plos.org with any questions.
+%
+% % % % % % % % % % % % % % % % % % % % % % % %
+
+\documentclass[10pt,letterpaper]{article}
+\usepackage[top=0.85in,left=2.75in,footskip=0.75in]{geometry}
+
+% Use adjustwidth environment to exceed column width (see example table in text)
+\usepackage{changepage}
+
+% Use Unicode characters when possible
+\usepackage[utf8]{inputenc}
+
+% textcomp package and marvosym package for additional characters
+\usepackage{textcomp,marvosym}
+
+% fixltx2e package for \textsubscript
+\usepackage{fixltx2e}
+
+% amsmath and amssymb packages, useful for mathematical formulas and symbols
+\usepackage{amsmath,amssymb}
+
+% cite package, to clean up citations in the main text. Do not remove.
+\usepackage{cite}
+
+% Use nameref to cite supporting information files (see Supporting Information section for more info)
+\usepackage{nameref,hyperref}
+
+% line numbers
+\usepackage[right]{lineno}
+
+% ligatures disabled
+\usepackage{microtype}
+\DisableLigatures[f]{encoding = *, family = * }
+
+% rotating package for sideways tables
+\usepackage{rotating}
+
+% Remove comment for double spacing
+%\usepackage{setspace}
+%\doublespacing
+
+% Text layout
+\raggedright
+\setlength{\parindent}{0.5cm}
+\textwidth 5.25in
+\textheight 8.75in
+
+% Bold the 'Figure #' in the caption and separate it from the title/caption with a period
+% Captions will be left justified
+\usepackage[aboveskip=1pt,labelfont=bf,labelsep=period,justification=raggedright,singlelinecheck=off]{caption}
+
+% Use the PLoS provided BiBTeX style
+\bibliographystyle{plos2015}
+
+% Remove brackets from numbering in List of References
+\makeatletter
+\renewcommand{\@biblabel}[1]{\quad#1.}
+\makeatother
+
+% Leave date blank
+\date{}
+
+% Header and Footer with logo
+\usepackage{lastpage,fancyhdr,graphicx}
+\usepackage{epstopdf}
+\pagestyle{myheadings}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\includegraphics[width=2.0in]{PLOS-submission.eps}}
+\rfoot{\thepage/\pageref{LastPage}}
+\renewcommand{\footrule}{\hrule height 2pt \vspace{2mm}}
+\fancyheadoffset[L]{2.25in}
+\fancyfootoffset[L]{2.25in}
+\lfoot{\sf PLOS}
+
+%% Include all macros below
+
+\newcommand{\lorem}{{\bf LOREM}}
+\newcommand{\ipsum}{{\bf IPSUM}}
+
+%% END MACROS SECTION
+
+
+\begin{document}
+\vspace*{0.35in}
+
+% Title must be 250 characters or less.
+% Please capitalize all terms in the title except conjunctions, prepositions, and articles.
+\begin{flushleft}
+{\Large
+\textbf\newline{On extrapolating past the range of observed data when making statistical predictions in ecology}
+}
+\newline
+% Insert author names, affiliations and corresponding author email (do not include titles, positions, or degrees).
+\\
+Paul B. Conn\textsuperscript{1,*},
+Devin S. Johnson\textsuperscript{1},
+Peter L. Boveng\textsuperscript{1},
+\\
+\bigskip
+\bf{1} National Marine Mammal Laboratory, NOAA, National Marine Fisheries Service,
+Alaska Fisheries Science Center, 7600 Sand Point Way NE, Seattle,
+WA 98115 USA
+\\
+\bigskip
+
+% Use the asterisk to denote corresponding authorship and provide email address in note below.
+* paul.conn@noaa.gov
+
+\end{flushleft}
+% Please keep the abstract below 300 words
+\section*{Abstract}
+Ecologists are increasingly using statistical models to predict animal abundance and occurrence in unsampled locations. The reliability of such predictions depends on a number of factors, including sample size, how far prediction locations are from the observed data, and similarity of predictive covariates in locations where data are gathered to locations where predictions are desired.  In this paper, we propose extending Cook's notion of an independent variable hull (IVH), developed originally for application with linear regression models, to generalized regression models as a way to help assess the potential reliability of predictions in unsampled areas.  Predictions occurring inside the generalized independent variable hull (gIVH) can be regarded as interpolations, while predictions occurring outside the gIVH can be regarded as extrapolations worthy of additional investigation or skepticism. We conduct a simulation study to demonstrate the usefulness of this metric for limiting the scope of spatial inference when conducting model-based abundance estimation from survey counts.  In this case, limiting inference to the gIVH substantially reduces bias, especially when survey designs are spatially imbalanced.  We also demonstrate the utility of the gIVH in diagnosing problematic extrapolations when estimating the relative abundance of ribbon seals in the Bering Sea as a function of predictive covariates.  We suggest that ecologists routinely use diagnostics such as the gIVH to help gauge the reliability of predictions from statistical models (such as generalized linear, generalized additive, and spatio-temporal regression models).
+% Please keep the Author Summary between 150 and 200 words
+% Use first person. PLOS ONE authors please skip this step.
+% Author Summary not valid for PLOS ONE submissions.
+\linenumbers
+
+\section*{Introduction}
+In ecology and conservation, a common goal is to make predictions about an unsampled random variable given a limited sample from the target population.  For instance, given a model ($\mathcal{M}$), estimated parameters ($\hat{\boldsymbol{\theta}}$), and a covariate vector ${\bf x}_i$, we often desire to predict a new observation $y_i$ at \textit{i} (where \textit{i} can be a design point or a spatial location).  For instance, we might use a generalized linear model (GLM;~\cite{McCullaghNelder1989}) or one of its extensions to predict species density or occurrence in a new location.  Such predictions can be of direct use to conservation and management, for instance, in estimating population abundance or distribution, and for projecting shifts in species range as a function of climate change. Spatially explicit estimates of abundance are also useful for testing theory related to biogeography or biodiversity (e.g., neutral theory;~\cite{Hubbell2001}), and for accurately estimating the strength of density dependence~\cite{ThorsonEtAlInPress}.
+
+Early in their training, ecologists and statisticians are warned against extrapolating statistical relationships
+past the range of observed data.  This caution is easily interpreted in the context of single-variable linear regression analysis; one should be cautious in using the fitted relationship to make predictions at some new response $y_i$ whenever $x_i < \min({\bf x})$ or $x_i > \max({\bf x})$ (where $x_i$ is an independent variable measured at point \textit{i}).  But what about more complicated situations
+where there are multiple explanatory variables, or when one uses a spatial regression model to account for the residual spatial autocorrelation that is inevitably present in patchy ecological data~\cite{LichsteinEtAl2002}?  How reliable are spatially- or temporally-explicit predictions in sophisticated models for animal abundance and occurrence?
+
+Statisticians have long struggled with the conditions under which fitted regression models are capable of
+making robust predictions at new combinations of explanatory variables.  The issue is sometimes considered more of a
+philosophical problem than a statistical one, and has even been likened to soothsaying~\cite{EhrenbergBound1993}.  To our mind, the reliability of predictions from statistical models is likely a function of several factors, including (i) the intensity of sampling,
+(ii) spatial or temporal proximity of the prediction location to locations where there are data, (iii) variability of the ecological process, and (iv) the similarity of explanatory covariates in prediction locations when compared to the ensemble of covariates for observed data locations.
+
+In this paper, we investigate one possibility for defining extrapolation in the GLM and its extensions, including generalized additive models (GAMs;~\cite{HastieTibshirani1999,Wood2006}) and spatio-temporal regression models (STRMs).  In particular, we exploit some of the same ideas used in multiple linear regression regarding leverage and outliers~\cite{Cook1979} to operationally define ``extrapolation" as making predictions that occur outside of a generalized independent variable hull (gIVH) of observed data points. Application of the gIVH and related criterion (e.g., prediction variance) can provide intuition regarding the reliability of predictions in unobserved locations, and can aid in model construction and survey design. We illustrate use of the gIVH on simulated count data, and on several species distribution model (SDM) formulations for ribbon seals ({\it Histriophoca fasciata}) in the eastern Bering Sea.  In particular, we examine the performance of the gIVH in identifying problematic extrapolations when modeling survey counts using GAMs, GLMs, and STRMs.
+% You may title this section "Methods" or "Models".
+% "Models" is not a valid title for PLoS ONE authors. However, PLoS ONE
+% authors may use "Analysis"
+\section*{Materials and Methods}
+
+All data collected and research activities described in this manuscript were performed under National Marine Fisheries Service research permit number 15126.
+
+\subsection*{Generalizing the independent variable hull}
+
+Extrapolation is often distinguished from interpolation.  In a prediction context, we might define (admittedly quite imprecisely) that extrapolation consists of making predictions that are ``outside the range of observed data" while interpolation consists of making predictions ``inside the range of observed data."  But what exactly do we mean by ``outside the range of observed data"?  Predictions outside the range of observed covariates?  Predictions for locations that are so far (in either geographical or covariate space) from places where data are gathered that we are skeptical that the estimated statistical relationship still holds? To help guide our choice of an operational definition, we turn to early work on outlier detection in simple linear regression analysis.
+
+In the context of outlier detection, Cook~\cite{Cook1979} defined an independent variable hull (IVH) as the smallest convex set containing all design points of a full-rank linear regression model.  Linear regression models are often written in matrix form; that is,
+\begin{linenomath*}
+\begin{equation*}
+  {\bf Y} = {\bf X} \boldsymbol{\beta} + \boldsymbol{\epsilon},
+\end{equation*}
+\end{linenomath*}
+where ${\bf Y}$ are observed responses, ${\bf X}$ is a so-called design matrix that includes explanatory variables~\cite{Draper1966}, and $\boldsymbol{\epsilon}$ represent normally distributed residuals (here and throughout the paper, bold symbols will be used to denote vectors and matrices).
+Under this formulation, the IVH is defined relative to the hat matrix, ${\bf V}_{\rm LR}={\bf X}({\bf X}^\prime{\bf X})^{-1}{\bf X}^\prime$ (where the subscript ``LR" denotes linear regression).  Letting $v$ denote the maximum diagonal element of ${\bf V}_{LR}$ (i.e. $v = \max(\textrm{diag}({\bf V}_{LR}))$), one can examine whether a new design point, ${\bf x}_0$ is within the IVH.  In particular, ${\bf x}_0$ is within the IVH whenever
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:IVH}
+  {\bf x}_0^\prime ({\bf X}^\prime{\bf X})^{-1}{\bf x}_0 \le v.
+\end{equation}
+\end{linenomath*}
+Cook~\cite{Cook1979} used this concept to identify influential observations and possible outliers, arguing that design points near the edge of the IVH are deserving of special attention.  Similarly, points outside the IVH should be interpreted with caution.
+
+We simulated two sets of design data to help illustrate application of the IVH (Fig. \ref{fig:IVH}).  In simple linear regression with one predictor variable, predictions on a hypothetical response variable obtained at covariate values slightly outside the range of observed data are also outside the IVH.  However, fitting a quadratic model exhibits more nuance; if there is a large gap between design points, intermediate covariate values may also be outside of the IVH and thus more likely to result in problematic predictions.  Fitting a model with two covariates and both linear and quadratic effects, the shape of the IVH is somewhat more irregular, and even includes a hole in the middle of the surface when interactions are modeled (Fig. \ref{fig:IVH}).  These simple examples highlight the sometimes counterintuitive nature of predictive inference, a problem that can only become worse as models with more dimensions are contemplated (including those with temporal or spatial structure).  Fortunately, the ideas behind the IVH provide a potential way forward.
+
+Cook's~\cite{Cook1979} formulation for the IVH is particular to linear regression analysis, which assumes independent and identically distributed (\textit{iid}) Gaussian error. Thus, it is not directly applicable to generalized models, such as those including alternative response distributions (e.g., Poisson, binomial) or spatial random effects.  Further, the hat matrix is not necessarily well defined for more complicated models with prior distributions on parameters, as with hierarchical models. However, since the hat matrix is proportional to prediction variance, Cook~\cite{Cook1979} notes that design points with maximum prediction variance will be located on the boundary of the IVH.  We therefore define a generalized independent variable hull (gIVH) as the set of all predicted locations $\mathcal{S}_0$ for which
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:gIVH}
+  {\rm var}(\lambda_i) \le {\rm max} [{\rm var}(\boldsymbol{\lambda}_{\mathcal{S}})],
+\end{equation}
+\end{linenomath*}
+where $i \in \mathcal{S}_0$, $\lambda_i$ corresponds to the mean prediction at \textit{i}, $\mathcal{S}$ denotes the set of locations where data are observed, and $\boldsymbol{\lambda}_\mathcal{S}$ denotes predictions at $\mathcal{S}$.
+
+Generalizations of the linear model are often written in the form
+\begin{linenomath*}
+\begin{equation}
+  Y_i \sim f_Y(g^{-1}(\mu_i)),
+  \label{eq:Y}
+\end{equation}
+\end{linenomath*}
+where $f_Y$ denotes a probability density or mass function (e.g., Bernoulli, Poisson), \textit{g} gives a link function, and
+$\mu_i$ is a linear predictor.  For many such generalizations, it is possible to specify the $\mu_i$ as
+\begin{linenomath*}
+\begin{equation}
+  \boldsymbol{\mu} = {\bf X}_{aug}\boldsymbol{\beta}_{aug},
+  \label{eq:mu-aug}
+\end{equation}
+\end{linenomath*}
+where ${\bf X}_{aug}$ denotes an augmented design matrix, and $\boldsymbol{\beta}_{aug}$ denote an augmented vector of parameters.  For instance, in a spatial model, $\boldsymbol{\beta}_{aug}$ might include both fixed effect parameters and spatial random effects in a reduced dimension subspace (see \nameref{S1_Text} for examples of how numerous types of models can be written in this form).
+
+When models are specified as in Eq. \ref{eq:mu-aug}, we can write prediction variance generically as
+\begin{linenomath*}
+\begin{equation}
+  \label{eq:var-mu}
+  {\rm var}(\boldsymbol{\mu})= {\bf X}_{aug} {\rm var}(\hat{\boldsymbol{\beta}}_{aug}) {\bf X}_{aug}^\prime,
+\end{equation}
+\end{linenomath*}
+where it is understood that the exact form of ${\bf X}_{aug}$ and ${\rm var}(\hat{\boldsymbol{\beta}}_{aug})$ depends on the model chosen (i.e., GLM, GAM, or STRM; \nameref{S1_Text}). Alternative model structures for $\boldsymbol{\mu}$ can also be accommodated; for instance, in Bayesian models ${\rm var}(\boldsymbol{\mu})$ can be set equal to posterior predictive variance, $\textrm{var}(\boldsymbol{\mu}|{\bf Y},\boldsymbol{\theta})$ (where $\boldsymbol{\theta}$ represent hyperparameters).
+
+The expression for prediction variance in Eqn. \ref{eq:var-mu} is on the linear predictor scale.  If a non-identity link function is used, an additional step is needed to convert prediction variance to the response scale (i.e.  to calculate $\textrm{var}(\boldsymbol{\lambda})$ as needed to define the gIVH in Eq. \ref{eq:gIVH}).  One approach for calculating variance on the response scale is simply to use the delta method~\cite{Dorfman1938,VerHoef2012b}.  In particular, we can write the variance of the expected responses as
+\begin{linenomath*}
+\begin{eqnarray}
+  \label{eq:var-lambda}
+  {\rm var}(\boldsymbol{\lambda}) & = & {\rm var}(g(\boldsymbol{\mu})) \nonumber \\
+  & \approx & \boldsymbol{\Delta} {\rm var}(\boldsymbol{\mu})\boldsymbol{\Delta}^\prime,
+\end{eqnarray}
+\end{linenomath*}
+where $\boldsymbol{\Delta}$ is a matrix of partial derivatives $\partial g(\mu_r)/\partial \mu_c$ ($r$ and $c$ denoting rows and columns of $\boldsymbol{\Delta}$, respectively).  Under common univariate link functions (e.g. log, logit, probit), $\boldsymbol{\Delta}$ has a diagonal form, while for multivariate links (e.g. multinomial logit) $\boldsymbol{\Delta}$ will be dense.  
+
+Alternatively, one can use a simulation based method for determining variance of the predictive mean response vector.  In Bayesian analysis of hierarchical models, this is easily accomplished via posterior predictive inference~\cite{Gelman2004}.  In a similar spirit, it is also possible to use parametric bootstrapping instead of the delta method to approximate prediction variance on the response scale for frequentist models~\cite{MarraEtAl2012,AugustinEtAl2013,MillerEtAl2013}.  
+
+We propose to use the gIVH in much the same manner as Cook~\cite{1979}.  In particular, we use the gIVH to determine whether spatial predictions are interpolations (predictive design points lying inside the gIVH) or extrapolations (predictive design points lying outside the gIVH).  For most of the following treatment, we shall assume that data have already been collected (see Discussion for comments on the potential use of the gIVH in survey planning).  For further details on how the gIVH was calculated for specific models in this paper, see \nameref{S1_Text}.
+
+\subsection*{Computing}
+
+We developed a package \texttt{SpatPred} in the R statistical programming environment~\cite{RTeam2012} to simulate data and conduct all analyses.  The seal dataset is included as part of this package, and is available at \url{https://github.com/pconn/SpatPred/releases}.  The R package has also been archived via figshare~\cite{Conn2015}.
+
+\subsection*{Simulation study}
+
+We conducted a simulation study to investigate whether the gIVH (and accompanying prediction variance) was useful in diagnosing prediction biases when analyzing animal count data. For each of 100 simulations, we generated animal abundance over a $30 \times 30$ grid assuming that animal density was homogeneous in each grid cell.  Animal abundance was generated as a function of three hypothetical spatially autocorrelated habitat covariates (\nameref{S2_Text}).   For each simulated landscape, we conducted virtual surveys of $n=45$ survey units using two different designs: (1) a spatially balanced sample~\cite{StevensOlsen2004}, and (2) a convenience sample where the probability of sampling was greater for cells closer to a ``base of operations" located in the middle of the survey grid. The former approach preserves randomness while seeking a degree of regularity when distributing sampling locations across the landscape, while the latter may be easier to implement logistically.
+
+We configured virtual sampling quadrats such that they encompassed 10\% of the area of each selected grid cell.  For ease of presentation and analysis, we assumed detection probability was 1.0 in each quadrat.  Once animal counts were simulated, three different estimation models were fitted to the data: a GLM, a GAM, and an STRM (\nameref{S1_Text}).  The fixed effects components of the GLM and STRM were configured to have both linear and quadratic covariate effects and first-order interactions, while the GAM expressed log-density as a function of smooth terms for each covariate (\nameref{S2_Text}).  Each model was provided with two of the three covariates used to generate the data.
+
+For each simulated data set and model structure, we calculated the posterior predictive variance and resulting gIVH as in Eq. \ref{eq:gIVH}. We then calculated posterior predictions of animal abundance within and outside of each gIVH in order to gauge bias as a function of this restriction.  Specifically, the performance of the gIVH may help decide its utility in limiting the scope of inference once data have been collected and analyzed, and perhaps point out areas worthy of additional sampling.  A fuller, technical description of the simulation study design is provided in \nameref{S2_Text}; a visual depiction of a single simulation replicate is displayed in
+Fig. \ref{fig:sim_maps}.
+
+
+\subsection*{Ribbon seal SDM}
+
+As part of an international effort, researchers with the U.S. National Marine Fisheries Service conducted aerial surveys over the eastern Bering Sea in 2012 and 2013.  Agency scientists used infrared video to detect seals that were on ice, and collected simultaneous digital photographs to provide information on species identity. For this study, we use spatially referenced count data from photographed ribbon seals, {\it Phoca fasciata} on a subset of 10 flights flown over the Bering Sea from April 20-27, 2012.  We limited flights to a one week period because sea ice melts rapidly in the Bering Sea in the spring, and modeling counts over a longer duration would likely require addressing how sea ice and seal abundance changes over both time and space~\cite{ConnEtAl2015}. However, limiting analysis to a one week period makes the assumption of static sea ice and seal densities tenable~\cite{ConnEtAl2014}.
+
+Our objective with this dataset will be to model seal counts on transects through 25km by 25km grid cells as a function of habitat covariates and possible spatial autocorrelation.
+Estimates of apparent abundance can then be obtained by summing predictions across grid cells. Figure \ref{fig:covs} show explanatory covariates gathered to help predict ribbon seal abundance.  These data are described in fuller detail by~\cite{ConnEtAl2014}, who extend the modeling framework of STRMs to account for incomplete detection and species misidentification errors.  Since our focus in this paper is on illustrating spatial modeling concepts, we devote our efforts to the comparably easier problem of estimating apparent abundance (i.e., uncorrected for vagaries of the detection process).
+
+Inspection of ribbon seal data (Fig. \ref{fig:flights}) immediately reveals a potential
+issue with spatial prediction: abundance of ribbon seals appears to be maximized in the southern and/or southeast quadrant of the surveyed area.  Predicting abundance in areas farther south and west may thus prove problematic, as the values of several explanatory covariates (Fig. \ref{fig:covs}) are also maximized in these regions.
+
+We start by fitting hierarchical GLMs and STRMs to the ribbon seal data.  To accommodate incomplete coverage of grid cells and account for non-target habitat, we adapted Eqs. \ref{eq:Y}-\ref{eq:mu-aug} as follows.
+First, let $Y_i$ denote the ribbon seal count ($Y_i$) obtained in sampled grid cell $i$.  Suppose that counts arise according to a log-Gaussian Cox process, such that
+\begin{eqnarray}
+  \label{eqn:Cox}
+  Y_i & \sim & {\rm Poisson}(\lambda_i) \mbox{ and } \\
+  \log(\lambda_i) & = & \log(P_i) + \log(A_i) + \theta_i + \epsilon_i, \nonumber
+\end{eqnarray}
+where $P_i$ gives the proportion of area surveyed in grid cell $i$, $A_i$ gives the proportion of cell $i$ that is seal habitat, $\theta_i$ is a linear predictor, and $\epsilon_i$ is normally distributed $iid$ error.  By formulating $\theta_i$ differently, we can arrive at representations characteristic of GLMs and STRMs (see \nameref{S1_Text}).
+
+The fixed effects component of the GLM and STRM included linear effects of all explanatory covariates (Fig. \ref{fig:covs}), as well as a quadratic effect for sea ice concentration.  For the STRM, we imposed a restricted spatial regression (RSR) formulation for spatially autocorrelated random effects, where dimension reduction was accomplished by only selecting eigenvectors of the spectral decomposition associated with eigenvalues that were greater than 0.5 (see \nameref{S1_Text} for additional information on model structure).  Adopting a Bayesian perspective, we estimated parameters for these models using MCMC (see \nameref{S1_Text} for algorithm details and information on prior distributions) with 60,000 iterations where the first 10,000 iterations were discarded as a burn-in.  We generated posterior predictions of ribbon seal abundance across the landscape as
+\begin{equation}
+  N_i \sim {\rm Poisson}(A_i \lambda_i),
+\end{equation}
+and calculated the gIVH as in Eqn. \ref{eq:gIVH}, with delta method modifications as specified in Eqn. \ref{eq:var-lambda}.
+
+We also fitted a frequentist GAM to seal data using the \texttt{mgcv} R package~\cite{Wood2006}. We included smooth terms for all explanatory covariates; however, owing to relative data sparsity, we chose the minimum number of knots allowable ($s=3$) for the default thin plate spline smoother.  We used a quasipoisson error structure in \texttt{mgcv} for this analysis, which was the most similar option available to the log-Gaussian Cox formulation chosen for the GLM and STRM models.  For more information on the procedure used to generate parameter estimates and abundance predictions on the response scale, see \nameref{S1_Text}.
+
+Initial spatial predictions using two of the three models (GLM, STRM) produced extremely high, unbelievable predictions along the southern boundary of the study area (Fig. \ref{fig:ribbon_plot}).  Predictions in this region were also largely out of the gIVH, indicating the potential utility for the gIVH in revealing problematic extrapolations.
+We considered several possible alternatives for trying to obtain more robust abundance estimates before settling on a preferred alternative.  First, one could refine the study area to eliminate predictions outside of the gIVH (as in the simulation study).  However, this is not ideal in that one does not get an abundance estimate for the whole study area, and it may be difficult to compare abundance from one year to the next using this approach. Second, one could try different predictive covariate models (e.g., by altering the combination or polynomial degree of covariates included in the model).  Finally, one could build in a priori knowledge of habitat preferences into the model structure.  We adopted the latter solution, incorporating presumed absences (i.e., zero counts where sampling was not conducted) in locations where it would have been (nearly) impossible to detect seals.  Specifically, we inserted presumed absences in cells where ice concentrations were \textless 0.1\%.  This solution seemed the most logical, as many of the large, anomalous predictions were over open water along the southern edge of the study area, where we would have obtained zero counts had they been surveyed.  This approach effectively requires that sea ice concentration be included as a predictive covariate to help model absences in cells without ice.
+
+
+\section*{Results}
+
+\subsection*{Simulation study}
+
+Posterior predictions from simulations indicated that the distribution for proportional error in total abundance was right skewed when statistical inference was made with regard to the entire survey area (Fig. \ref{fig:sim_boxplots}).  Although median bias was close to zero, this right skew translated into positive mean bias, and was exacerbated when convenience sampling was employed. The magnitude of mean absolute bias was either the same or reduced (often substantially so) when inference was constrained to the gIVH.  Positive proportional bias was the rule, and was of concerning magnitude ($\approx 0.3$) for GLMs and STRMs when convenience sampling was employed and inference was not restricted to the gIVH.  By contrast, proportional bias was close to zero when inference was restricted to the gIVH, although there appeared to be a small negative bias (Fig. \ref{fig:sim_boxplots}).  Interestingly, bias for frequentist GAMs was of smaller magnitude that the Bayesian GLM or STRM models for the particular model structures used here.
+
+\subsection*{Ribbon Seal SDM}
+
+Fitting our three ribbon seal SDMs to the augmented dataset with presumed absences, most predictions occurred within the gIVH (Fig. \ref{fig:ribbon_plot}).  Posterior summaries of abundance across the entire study area were of similar magnitude, with $5\%$, $50\%$, and $95\%$ posterior prediction quantiles as follows: GLM (48,686, 64,836, 93,927); STRM(41,039, 63,717, 194,095).  The GAM produced an estimate of 92,277 (SE 16,549).  The largest differences among the three models was in the southwest corner of the study area in the area where predictions often occurred outside the gIVH.  Restricting comparison of abundance to those cells that occur within the gIVH in all three models (i.e. only cells not highlighted in the right column of Fig. \ref{fig:ribbon_plot}), posterior prediction quantiles for the GLM were (41,750, 52,863, 69,557) and for the STRM were (39,446, 56,520, 135,427); estimated GAM abundance from \texttt{mgcv} was 59,104 (SE 5,376).  There thus appears to be substantial between-model variation in predicted abundance when summed over the entire study area, but much better agreement (albeit with a heavier right tail for the STRM) when restricting inference to locations where predictions occur within the gIVH.
+
+We note that these estimates are for example illustration only, as they are uncorrected for imperfect detection (e.g., incomplete detection of thermal cameras, animals that were unavailable for sampling because they were in the water, species misidentification;~\cite{ConnEtAl2014}).  Our approach here was to examine extrapolation and prediction error using relatively simple models, with the understanding that such effects are also likely to occur in complex models with more realistic observation processes.  Standard diagnostics (e.g. q-q plots in \texttt{mgcv}) also suggested some lack of fit associated with the quasipoisson error distribution; future work should investigate alternate error structures such as the Tweedie distribution~\cite{MillerEtAl2013}.  Although not reported here, additional model fitting suggested sensitivity to model complexity and choice of basis, both of which are worthy of additional investigation.
+
+
+\section*{Discussion}
+
+We have demonstrated the capacity of certain classes of statistical models to produce biased predictions of animal abundance when extrapolating past the range of observed data. In simulations, commonly used models exhibited substantial mean positive bias when predictions were required for the entire study area, particularly when convenience sampling was employed. Median bias in the simulation study was close to zero, but the bias distribution was right skewed, indicating the possibility of considerably biased overestimates in a substantial proportion of simulation replicates.  By contrast, restricting inference to locations within the gIVH led to small negative bias.  Although this negative bias is undesirable, it may be preferable from a conservation and management standpoint.  For instance, making management decisions (e.g., harvest, restoration efforts) based on estimates that have a small negative bias are much less likely to lead to catastrophic population collapse than are decisions based on overestimates.
+
+In the ribbon seal example, naive extrapolation of fitted statistical relationships produced high positive bias along the southern boundary of the study area for the GAM and STRM models.  However, the gIVH appeared useful in diagnosing places where extrapolations from the fitted statistical model were problematic.  For ribbon seal relative abundance, it was useful for confirming that the naive models needed to be reformulated.  Reformulated models (with presumed absence data) still yielded estimates of total abundance with considerable between-model variation in the southwest corner of the study area.  However, when inference was restricted to locations within the gIVH for all three fitted models, abundance estimates were quite comparable. 
+ 
+In the field of SDM modeling, researchers often stress the need for prediction locations to be similar to the locations used for model development~\cite{ElithLeathwick2009}.  One way to accomplish this is through a prediction envelope, whereby a specific criterion is used to limit predictions of animal density or occurrence to the range of conditions and covariates encountered during surveys~\cite{MannocciEtAl2015}.  Using the gIVH for this purpose will likely be more conservative than envelope specifications based on other criterion (e.g., in contrast to minimum an maximum observed covariate values as in~\cite{MannocciEtAl2015}), but is more in line with linear modeling theory.  A comparison of envelope specification methods is beyond the scope of this paper, but we suspect there are cases where seemingly intuitive envelope strategies result in problematic extrapolations, particularly when the form of prediction models is of high dimension and/or includes multiple interaction terms.
+
+In SDMs and model-based abundance estimation, the goal for analysts is often to build predictive maps of species abundance and/or occurrence using a limited number of sample locations.
+In such applications, the ultimate aim of analysts should be to build models that have low bias and high precision.  However, traditional approaches to quantifying bias (e.g., goodness-of-fit statistics) only work with observed data points.  When inference is extended to unsampled locations, the gIVH appears to be a useful diagnostic for whether bias for predictions in unsampled locations can be expected.  In some cases, biological knowledge and intuition may be sufficient to diagnose anomalous predictions.  However, such determinations are likely to be quite subjective, and may prove insufficient when there are a large number of regression coefficients and interaction terms.  For instance, even relatively simple regression models may exhibit non-intuitive patterns (e.g., Fig. \ref{fig:IVH}).  Further, relying on expert opinion alone in successive rounds of model formulation and fitting may lead to investigators choosing models based on how much they like the results, which is clearly not ideal scientific practice.
+
+Our intent is to raise awareness of potential problems with extrapolation bias in statistical models, and to provide an additional tool (the gIVH) to help diagnose its presence.  Other methods for selecting models to enhance predictive performance, such as cross validation~\cite{PicardCook1984}, are also useful for this purpose, but may not entirely eliminate the problem (particularly for sparse datasets). One approach that might be useful in practice is to combine the cross validation and gIVH paradigms - for instance, using cross validation to narrow down the field to a suite of models with good predictive performance at test locations, and then calculating the gIVH to examine the potential for anomalously high predictions in unsampled locations.
+
+The analyses in this paper focused on abundance estimation, which is necessarily non-negative.  As such, counts are usually analyzed with a log link function, and there is a much greater potential for positive bias than negative.  Since prediction variance tends to increase as a function of the magnitude of the prediction, the gIVH will only tend to be able to diagnose predictions that are anomalously large.  However, one could also apply the gIVH when predicting species occurrence from presence/absence data.  In this case, common link functions (e.g., probit or logit) are symmetric, and potential for positive and negative bias in predictive maps seem equally likely.  Future research should be directed to examine conditions under which the gIVH is a useful diagnostic in such applications.
+
+One area that gIVH ideas may also prove useful is in formulating survey designs.  The topic of optimal (or near-optimal) spatial design has received considerable attention in the statistical literature, often in the context of designing environmental monitoring programs~\cite{Muller2007}.  Optimal designs can be sensitive to the structure of the estimation model that is used, so that tailoring a survey design to a particular model can be somewhat dangerous if there is uncertainty about the ultimate ``best" structure for the model used to relate animal abundance and occurrence to available covariates.  Nevertheless, one could still think about augmenting a given sampling design with a number of locations which are known or thought to have high prediction variance as a function of available covariates (e.g., the southwest corner of the study area in the ribbon seal example).  This could potentially be done as an exercise before any data (or perhaps data from a pilot study) have been collected.  We are excited about this prospect, and it is a subject of current research.
+
+
+
+\section*{Supporting Information}
+
+% Include only the SI item label in the subsection heading. Use the \nameref{label} command to cite SI items in the text.
+
+\subsection*{S1 Text}
+\label{S1_Text}
+{\bf Model formulation, Gibbs sampling algorithms, and gIVH calculations for certain classes and extensions of the generalized linear model.}
+
+\subsection*{S2 Text}
+\label{S2_Text}
+{\bf Full details of simulation study examining predictive extrapolation.}
+
+\section*{Acknowledgments}
+We thank J. Thorson and J. Ver Hoef for helpful discussion on an earlier version of this manuscript.  David L. Miller also provided an insightful review that led us to incorporate frequentist GAMs into the suite of estimation models considered. The views and conclusions in this article do not necessarily represent findings or policy of the U.S. National Oceanic and Atmospheric Administration.  Any use of trade, firm, or product names is for descriptive purposes only and does not imply endorsement by the U.S. Government.
+
+\nolinenumbers
+
+%\section*{References}
+% Either type in your references using
+% \begin{thebibliography}{}
+% \bibitem{}
+% Text
+% \end{thebibliography}
+%
+% OR
+%
+% Compile your BiBTeX database using our plos2015.bst
+% style file and paste the contents of your .bbl file
+% here.
+%
+\bibliographystyle{plos2015}
+\bibliography{master_bib}
+
+%\begin{thebibliography}{10}
+
+%\end{thebibliography}
+
+\begin{figure}[!h]
+\caption{{\bf Example IVHs constructed from simulated data}.  In (A) and (B), linear regression is used to relate a response variable to a single covariate, \textit{x}, obtained at locations denoted with an ``x".  Using \textit{x} as a simple linear effect (A), only predictions less than the minimum observed value of \textit{x} or greater than the maximum value of \textit{x} are outside the IVH (shaded area), as scaled prediction variance in these areas (solid line) is greater than the maximum scaled prediction variance for observed data (dashed line).  Using both linear and quadratic effects (B), some intermediate points are also outside the IVH.  When both linear and quadratic effects of two covariates (\textit{x}\textsubscript{1} and \textit{x}\textsubscript{2}) are modeled, the IVH is more nuanced and depends on whether interactions are omitted (C) or included (D). }
+\label{fig:IVH}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{{\bf Depiction of a single simulation replicate where problematic extrapolation occurs}.  Panels (A-C) give simulated covariate values, panel D gives true animal abundance, (E) gives estimated abundance from a GLM run on count data from a spatially balanced survey design, and (F) gives abundance from a GLM applied to count data from a convenience survey.  In (E-F), predictions outside the gIVH are represented by black boxes, and sampling locations are represented with an x.  For the convenience sample, there was considerable positive bias, particularly in cells outside of the gIVH.  In this case, the median posterior abundance prediction for the entire survey area is 57\% greater than true abundance when inference is made to the whole study area.  When inference is restricted to cells within the gIVH, median posterior abundance is 16\% greater than true abundance.}
+\label{fig:sim_maps}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{{\bf Assembled covariates used to help explain and predict ribbon seal relative abundance in the eastern Bering Sea}.  Covariates include distance from mainland (\texttt{dist\_mainland}), distance from 1000m depth contour (\texttt{dist\_shelf}), average remotely sensed sea ice concentration while surveys were being conducted (\texttt{ice\_conc}), and distance from the southern sea ice edge (\texttt{dist\_edge}).  All covariates except ice concentration were standardized to have a mean of 1.0 prior to plotting and analysis.
+}
+\label{fig:covs}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{{\bf Aerial survey tracks over the Bering Sea, April 22-29, 2012}. Survey tracks are shown in blue, and are overlayed on a tesselated study area consisting of 25km by 25km grid cells (gray lines).  Dark gray indicates land, while the orange dashed line indicates a 1000m depth contour, and the solid brown line shows the U.S Exclusive Economic Zone (EEZ) boundary. Colored pixels indicate ribbon seal counts along aerial transects. The average effective area surveyed in each grid cell was approximately 2.6km\textsuperscript{2} (0.4\%).  Note that surveys were designed to target multiple seal species, several of which had high densities further north (results not shown). }
+\label{fig:flights}
+\end{figure}
+
+\begin{figure}[!h]
+\caption{{\bf Boxplots summarizing proportional error in abundance from the simulation experiment}. Each boxplot summarizes the distribution of proportional error in the posterior predictive median of abundance as a function of estimation model (x-axis), survey design (columns) and whether or not inference was restricted to the gIVH (rows).  The lower and upper limits of each box correspond to first and third quartiles, while whiskers extend to the lowest and highest observed bias within 1.5 interquartile range units from the box.  Outliers outside of this range are denoted with points.  Horizontal lines within boxes denote median bias.  The two numbers located below each boxplot indicate mean bias (upper number) and the number of additional outliers for which proportional bias was greater than 2.0 (lower number). }
+\label{fig:sim_boxplots}
+\end{figure}
+
+
+\begin{figure}[!h]
+\caption{{\bf Predictions of ribbon seal apparent abundance across the eastern Bering sea from models fit to survey data}.  Predictions were obtained using the posterior predictive mean for GLM and STRM models, and for the GAM using the \texttt{predict.gam} function in the R \texttt{mgcv} package~\cite{Wood2006}. Each row gives result for different model types (GLM, GAM, or STRM, respectively); left column plots give results for naive runs without presumed absences, while plots in the right column give predictions for runs where presumed absence data (i.e., 0 counts in cells with \textless 0.1\% ice) were included. Cells highlighted in black indicate those where predictions were outside the generalized independent variable hull (gIVH). }
+\label{fig:ribbon_plot}
+\end{figure}
+
+
+\end{document}
+
